@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Vyne — Encrypted Video Calls</title>
+<style>
+  /* ── Reset & Base ─────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0d0f14;
+    --surface:   #161922;
+    --surface2:  #1e2230;
+    --border:    #2a2f3d;
+    --accent:    #3b82f6;
+    --accent-h:  #2563eb;
+    --green:     #22c55e;
+    --red:       #ef4444;
+    --amber:     #f59e0b;
+    --text:      #e2e8f0;
+    --muted:     #64748b;
+    --radius:    12px;
+    --radius-sm: 8px;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 15px;
+    line-height: 1.5;
+    overflow: hidden;
+  }
+
+  /* ── Layout ───────────────────────────────────────────────────────────── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+  }
+
+  /* ── Lobby screen ─────────────────────────────────────────────────────── */
+  #lobby {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    padding: 24px;
+    gap: 32px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  .logo-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .lobby-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 24px;
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .lobby-card h2 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .lobby-card p {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: background 0.15s, transform 0.1s;
+    width: 100%;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: var(--accent-h); }
+  .btn-ghost {
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-ghost:hover { background: var(--border); }
+  .btn-danger { background: var(--red); color: #fff; }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .divider::before, .divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .link-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+  }
+  .link-box span {
+    flex: 1;
+    font-size: 13px;
+    color: var(--accent);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-family: ui-monospace, monospace;
+  }
+  .link-box button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 18px;
+    padding: 2px;
+    flex-shrink: 0;
+  }
+  .link-box button:hover { color: var(--text); }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+  .pill-green { background: rgba(34,197,94,0.15); color: var(--green); }
+  .pill-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
+  .pill-red   { background: rgba(239,68,68,0.15);  color: var(--red);   }
+  .pill-blue  { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .pill-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ── Call screen ──────────────────────────────────────────────────────── */
+  #call-screen {
+    display: none;
+    flex-direction: column;
+    height: 100dvh;
+    position: relative;
+  }
+
+  /* video area */
+  #videos {
+    flex: 1;
+    position: relative;
+    background: #000;
+    overflow: hidden;
+  }
+
+  #remote-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #0a0c10;
+  }
+
+  #local-video {
+    position: absolute;
+    bottom: 16px;
+    right: 16px;
+    width: 120px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    border: 2px solid var(--border);
+    background: #111;
+    cursor: pointer; /* tap to swap */
+    z-index: 10;
+  }
+
+  @media (max-width: 480px) {
+    #local-video { width: 90px; height: 68px; bottom: 10px; right: 10px; }
+  }
+
+  /* status overlay */
+  #status-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    background: rgba(13,15,20,0.85);
+    z-index: 5;
+    pointer-events: none;
+  }
+  #status-overlay.hidden { display: none; }
+  #status-text {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+    text-align: center;
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* top bar */
+  #topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    background: linear-gradient(to bottom, rgba(13,15,20,0.9), transparent);
+    z-index: 20;
+  }
+
+  #call-timer {
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    background: rgba(13,15,20,0.6);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  #data-usage {
+    font-size: 11px;
+    color: var(--muted);
+    background: rgba(13,15,20,0.6);
+    padding: 4px 10px;
+    border-radius: 100px;
+  }
+
+  /* bottom controls */
+  #controls {
+    padding: 16px 16px 24px;
+    background: linear-gradient(to top, var(--bg), transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .ctrl-row {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    align-items: center;
+  }
+
+  .ctrl-btn {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    transition: background 0.15s, transform 0.1s;
+    background: var(--surface2);
+    color: var(--text);
+    border: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .ctrl-btn:active { transform: scale(0.93); }
+  .ctrl-btn.active { background: var(--accent); border-color: var(--accent); }
+  .ctrl-btn.end    { background: var(--red);   border-color: var(--red);    width: 60px; height: 60px; }
+  .ctrl-btn.off    { background: var(--surface2); color: var(--red); border-color: var(--red); }
+
+  .quality-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+  }
+  .q-btn {
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .q-btn.selected {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .q-btn:hover:not(.selected) { color: var(--text); border-color: var(--text); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ══════════ LOBBY ══════════ -->
+  <div id="lobby">
+    <div class="logo">
+      <div class="logo-dot"></div>
+      Vyne
+    </div>
+
+    <!-- Create call card -->
+    <div class="lobby-card" id="create-card">
+      <h2>Start a new call</h2>
+      <p>A unique encrypted link will be generated. Share it with one person to connect.</p>
+      <button class="btn btn-primary" onclick="createCall()">🔗 Create call link</button>
+    </div>
+
+    <!-- Shareable link (shown after creating) -->
+    <div class="lobby-card" id="link-card" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h2>Your call link</h2>
+        <span class="pill pill-amber"><span class="pill-dot"></span> Waiting</span>
+      </div>
+      <p>Send this link to the person you want to call. The call starts when they join.</p>
+      <div class="link-box">
+        <span id="share-link"></span>
+        <button onclick="copyLink()" title="Copy">📋</button>
+      </div>
+      <button class="btn btn-ghost" onclick="shareLink()">📤 Share link</button>
+    </div>
+
+    <!-- Join card (shown when room ID is in URL) -->
+    <div class="lobby-card" id="join-card" style="display:none">
+      <h2>You've been invited</h2>
+      <p>Tap below to join the encrypted video call. Your camera and microphone will be requested.</p>
+      <div style="display:flex;gap:8px;flex-direction:column">
+        <button class="btn btn-primary" onclick="joinCall()">📹 Join call</button>
+        <button class="btn btn-ghost"   onclick="joinAudioOnly()">🎤 Join audio only</button>
+      </div>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);text-align:center;max-width:320px">
+      🔒 End-to-end encrypted via WebRTC DTLS-SRTP.&nbsp; No account needed. No recording.
+    </p>
+  </div>
+
+  <!-- ══════════ CALL SCREEN ══════════ -->
+  <div id="call-screen">
+    <div id="videos">
+      <video id="remote-video" autoplay playsinline></video>
+      <video id="local-video"  autoplay playsinline muted></video>
+
+      <!-- Status overlay while connecting -->
+      <div id="status-overlay">
+        <div class="spinner"></div>
+        <div id="status-text">Connecting…</div>
+      </div>
+    </div>
+
+    <!-- Top bar: timer + data counter -->
+    <div id="topbar">
+      <div id="call-timer">00:00</div>
+      <div id="data-usage">0 MB used</div>
+      <span id="conn-quality" class="pill pill-blue"><span class="pill-dot"></span> <span id="quality-label">HD</span></span>
+    </div>
+
+    <!-- Bottom controls -->
+    <div id="controls">
+      <!-- Quality presets -->
+      <div class="quality-row">
+        <button class="q-btn" id="q-audio" onclick="setQuality('audio')">Audio</button>
+        <button class="q-btn" id="q-low"   onclick="setQuality('low')">Low</button>
+        <button class="q-btn selected" id="q-med" onclick="setQuality('medium')">Medium</button>
+        <button class="q-btn" id="q-high"  onclick="setQuality('high')">High</button>
+      </div>
+
+      <!-- Main controls -->
+      <div class="ctrl-row">
+        <button class="ctrl-btn" id="btn-mic"   onclick="toggleMic()"   title="Toggle mic">🎤</button>
+        <button class="ctrl-btn end"             onclick="endCall()"     title="End call">📵</button>
+        <button class="ctrl-btn" id="btn-cam"   onclick="toggleCam()"   title="Toggle camera">📷</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * SIGNALING_URL: WebSocket address of your signaling server.
+ * In production, replace with wss://your-domain.com:8080
+ * 
+ * ICE_SERVERS: STUN servers for NAT traversal.
+ * For India/Chennai: Google's STUN is usually fine for direct P2P.
+ * Add TURN servers here if you have them (see notes at bottom).
+ */
+// SIGNALING_URL is injected at build/deploy time via Netlify env variable.
+// Fallback to localhost for local development.
+const SIGNALING_URL = window.__VYNE_SIGNAL_URL__ || "ws://localhost:8080";
+
+const CONFIG = {
+  SIGNALING_URL: SIGNALING_URL,
+
+  ICE_SERVERS: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    // TURN fallback — uncomment and fill in when you have a coturn instance:
+    // {
+    //   urls:       "turn:your-turn-server.com:3478",
+    //   username:   "turnuser",
+    //   credential: "turnpassword"
+    // }
+  ],
+
+  /**
+   * Quality presets — tuned for Indian mobile data (2G/3G/4G).
+   * All values target Opus audio (~20 kbps) + video budgets below.
+   *
+   * Rough data usage (audio + video combined):
+   *   audio-only : ~20 kbps  = ~9 MB/hour
+   *   low  240p  : ~150 kbps = ~68 MB/hour
+   *   medium 360p: ~350 kbps = ~157 MB/hour  ← default; good on 4G
+   *   high  480p : ~700 kbps = ~315 MB/hour
+   */
+  QUALITY: {
+    audio:  { video: false, width: 0,   height: 0,   fps: 0,  maxVideoBps: 0,      label: "Audio" },
+    low:    { video: true,  width: 320,  height: 240,  fps: 12, maxVideoBps: 120_000, label: "240p" },
+    medium: { video: true,  width: 480,  height: 360,  fps: 20, maxVideoBps: 300_000, label: "360p" },
+    high:   { video: true,  width: 640,  height: 480,  fps: 25, maxVideoBps: 600_000, label: "480p" },
+  },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+let ws          = null;   // WebSocket to signaling server
+let pc          = null;   // RTCPeerConnection
+let localStream = null;   // MediaStream (camera + mic)
+let roomId      = null;   // The room we're in
+let isCreator   = false;  // true if we created the room (makes the offer)
+let currentQuality = "medium";
+let micOn  = true;
+let camOn  = true;
+let callStartTime = null;
+let timerInterval = null;
+// Rough data estimate: WebRTC doesn't expose exact bytes in all browsers,
+// so we estimate from bitrate × time.
+let estimatedBytes = 0;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOBBY: ROOM ID DETECTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Room ID is stored in the URL hash: https://site.com/#roomId=abc123
+ * Using the hash means the room ID is NEVER sent to any server in HTTP logs,
+ * which is a small but meaningful privacy improvement.
+ */
+function getRoomIdFromUrl() {
+  const hash = location.hash.slice(1); // strip '#'
+  const params = new URLSearchParams(hash);
+  return params.get("roomId");
+}
+
+function setRoomIdInUrl(id) {
+  location.hash = `roomId=${id}`;
+}
+
+// Generate a cryptographically random 10-char alphanumeric room ID
+function generateRoomId() {
+  const arr = new Uint8Array(8);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(36).padStart(2, "0")).join("").slice(0, 10);
+}
+
+// On page load: if a room ID is in the URL, show the "Join" card
+window.addEventListener("load", () => {
+  const id = getRoomIdFromUrl();
+  if (id) {
+    roomId = id;
+    document.getElementById("create-card").style.display = "none";
+    document.getElementById("join-card").style.display  = "block";
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// LOBBY ACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function createCall() {
+  roomId    = generateRoomId();
+  isCreator = true;
+  setRoomIdInUrl(roomId);
+
+  const link = `${location.origin}${location.pathname}#roomId=${roomId}`;
+  document.getElementById("share-link").textContent = link;
+  document.getElementById("create-card").style.display = "none";
+  document.getElementById("link-card").style.display  = "block";
+
+  // Acquire media and connect to signaling server immediately so we're ready
+  await acquireMedia("medium");
+  connectSignaling();
+}
+
+function copyLink() {
+  const link = document.getElementById("share-link").textContent;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.querySelector(".link-box button");
+    btn.textContent = "✅";
+    setTimeout(() => btn.textContent = "📋", 1500);
+  });
+}
+
+async function shareLink() {
+  const link = document.getElementById("share-link").textContent;
+  if (navigator.share) {
+    await navigator.share({ title: "Join my Vyne call", url: link });
+  } else {
+    copyLink();
+  }
+}
+
+async function joinCall() {
+  isCreator = false;
+  await acquireMedia("medium");
+  connectSignaling();
+}
+
+async function joinAudioOnly() {
+  isCreator = false;
+  currentQuality = "audio";
+  await acquireMedia("audio");
+  connectSignaling();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MEDIA ACQUISITION
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function acquireMedia(quality) {
+  const q = CONFIG.QUALITY[quality];
+  const constraints = q.video
+    ? {
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          // Opus is the standard WebRTC audio codec; these hints help Chrome
+          sampleRate: 16000,     // 16 kHz is fine for voice; saves bandwidth
+          channelCount: 1,       // mono saves ~50% audio bandwidth
+        },
+        video: {
+          width:     { ideal: q.width },
+          height:    { ideal: q.height },
+          frameRate: { ideal: q.fps, max: q.fps },
+          facingMode: "user",
+        },
+      }
+    : {
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+        video: false,
+      };
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    document.getElementById("local-video").srcObject = localStream;
+    updateQualityLabel(quality);
+  } catch (err) {
+    alert(`Camera/mic access failed: ${err.message}`);
+    throw err;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGNALING (WebSocket)
+// ═══════════════════════════════════════════════════════════════════════════
+
+function connectSignaling() {
+  showCallScreen();
+  setStatus("Connecting to server…");
+
+  ws = new WebSocket(CONFIG.SIGNALING_URL);
+
+  ws.onopen = () => {
+    setStatus("Waiting for partner…");
+    ws.send(JSON.stringify({ type: "join", roomId }));
+  };
+
+  ws.onmessage = async (evt) => {
+    const msg = JSON.parse(evt.data);
+
+    switch (msg.type) {
+
+      // Server confirms we joined; also tells us if we're peer0 or peer1
+      case "joined":
+        isCreator = (msg.peerId === "peer0");
+        // peer0 waits for peer1 to arrive before creating the offer
+        if (!isCreator) {
+          // peer1: create the WebRTC connection and wait for an offer
+          await createPeerConnection();
+        }
+        break;
+
+      // peer0 gets this when peer1 joins — now it's time to make the offer
+      case "peer-joined":
+        setStatus("Partner joined! Establishing encrypted channel…");
+        await createPeerConnection();
+        await sendOffer();
+        break;
+
+      // peer1 receives the offer from peer0
+      case "offer":
+        await handleOffer(msg.sdp);
+        break;
+
+      // peer0 receives peer1's answer
+      case "answer":
+        await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: msg.sdp }));
+        break;
+
+      // Both sides exchange ICE candidates
+      case "ice-candidate":
+        if (msg.candidate) {
+          try {
+            await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+          } catch {}
+        }
+        break;
+
+      // Partner muted/unmuted, toggled camera
+      case "media-state":
+        // Could show a UI indicator — left as an exercise
+        console.log("Partner media state:", msg.state);
+        break;
+
+      case "peer-left":
+        setStatus("Partner disconnected.");
+        setTimeout(endCall, 3000);
+        break;
+
+      case "error":
+        console.error("Signaling error:", msg.message);
+        setStatus(`Error: ${msg.message}`);
+        break;
+    }
+  };
+
+  ws.onerror = (e) => {
+    setStatus("Connection error — check your internet.");
+    console.error("WebSocket error", e);
+  };
+
+  ws.onclose = () => {
+    if (pc && pc.connectionState !== "closed") {
+      setStatus("Signaling disconnected.");
+    }
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WEBRTC PEER CONNECTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function createPeerConnection() {
+  pc = new RTCPeerConnection({ iceServers: CONFIG.ICE_SERVERS });
+
+  // Add all local tracks
+  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+  // ICE candidate → send to partner via signaling
+  pc.onicecandidate = ({ candidate }) => {
+    if (candidate) {
+      ws.send(JSON.stringify({ type: "ice-candidate", candidate }));
+    }
+  };
+
+  // Connection state changes
+  pc.onconnectionstatechange = () => {
+    console.log("Connection state:", pc.connectionState);
+    switch (pc.connectionState) {
+      case "connected":
+        onCallConnected();
+        break;
+      case "disconnected":
+      case "failed":
+        setStatus("Connection lost. Trying to reconnect…");
+        break;
+    }
+  };
+
+  // ICE state — useful for debugging
+  pc.oniceconnectionstatechange = () => {
+    console.log("ICE state:", pc.iceConnectionState);
+  };
+
+  // Remote track arrives — display remote video
+  pc.ontrack = ({ streams }) => {
+    document.getElementById("remote-video").srcObject = streams[0];
+  };
+}
+
+async function sendOffer() {
+  const offer = await pc.createOffer({
+    offerToReceiveAudio: true,
+    offerToReceiveVideo: currentQuality !== "audio",
+  });
+  await pc.setLocalDescription(offer);
+
+  // Apply bitrate constraints to the outgoing video sender
+  await applyBitrateConstraints(currentQuality);
+
+  ws.send(JSON.stringify({ type: "offer", sdp: pc.localDescription.sdp }));
+}
+
+async function handleOffer(sdp) {
+  await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp }));
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await applyBitrateConstraints(currentQuality);
+  ws.send(JSON.stringify({ type: "answer", sdp: pc.localDescription.sdp }));
+}
+
+/**
+ * Apply bitrate constraints to the video RTCRtpSender.
+ * This is the key knob for data-efficiency on mobile.
+ *
+ * sendEncodings.maxBitrate caps the encoder at the specified bps.
+ * Combined with low resolution + fps, this dramatically reduces data usage.
+ */
+async function applyBitrateConstraints(quality) {
+  if (!pc) return;
+  const q = CONFIG.QUALITY[quality];
+  const senders = pc.getSenders();
+  for (const sender of senders) {
+    if (sender.track?.kind === "video") {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      params.encodings[0].maxBitrate = q.maxVideoBps;
+      // scaleResolutionDownBy: 1 = no downscaling; >1 scales down
+      params.encodings[0].scaleResolutionDownBy = 1;
+      try { await sender.setParameters(params); } catch {}
+    }
+    if (sender.track?.kind === "audio") {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) {
+        params.encodings = [{}];
+      }
+      // Cap audio at 24 kbps — Opus sounds great at this for voice
+      params.encodings[0].maxBitrate = 24_000;
+      try { await sender.setParameters(params); } catch {}
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CALL CONNECTED
+// ═══════════════════════════════════════════════════════════════════════════
+
+function onCallConnected() {
+  document.getElementById("status-overlay").classList.add("hidden");
+  callStartTime = Date.now();
+  startTimer();
+  startDataEstimator();
+}
+
+function startTimer() {
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
+    const s = (elapsed % 60).toString().padStart(2, "0");
+    document.getElementById("call-timer").textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function startDataEstimator() {
+  // Estimate bytes consumed from current quality preset's bitrate
+  setInterval(() => {
+    const q = CONFIG.QUALITY[currentQuality];
+    // total bitrate ≈ maxVideoBps + 24000 audio
+    const bps = q.maxVideoBps + 24_000;
+    estimatedBytes += bps / 8; // bits → bytes
+    const mb = (estimatedBytes / 1_000_000).toFixed(1);
+    document.getElementById("data-usage").textContent = `~${mb} MB used`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTROLS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function toggleMic() {
+  micOn = !micOn;
+  localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  const btn = document.getElementById("btn-mic");
+  btn.textContent = micOn ? "🎤" : "🔇";
+  btn.classList.toggle("off", !micOn);
+  sendMediaState();
+}
+
+function toggleCam() {
+  camOn = !camOn;
+  localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  const btn = document.getElementById("btn-cam");
+  btn.textContent = camOn ? "📷" : "🚫";
+  btn.classList.toggle("off", !camOn);
+  sendMediaState();
+}
+
+/**
+ * Quality switching re-applies sender constraints immediately.
+ * A full renegotiation (new offer/answer) is only needed when switching
+ * between audio-only and video modes.
+ */
+async function setQuality(q) {
+  document.querySelectorAll(".q-btn").forEach(b => b.classList.remove("selected"));
+  document.getElementById(`q-${q}`).classList.add("selected");
+  currentQuality = q;
+  await applyBitrateConstraints(q);
+  updateQualityLabel(q);
+}
+
+function updateQualityLabel(q) {
+  document.getElementById("quality-label").textContent = CONFIG.QUALITY[q].label;
+}
+
+function sendMediaState() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "media-state", state: { micOn, camOn } }));
+  }
+}
+
+function endCall() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "leave" }));
+    ws.close();
+  }
+  if (pc) { pc.close(); pc = null; }
+  if (localStream) { localStream.getTracks().forEach(t => t.stop()); localStream = null; }
+  clearInterval(timerInterval);
+
+  // Return to lobby (strip the room hash so page reloads cleanly)
+  history.pushState(null, "", location.pathname);
+  location.reload();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// UI HELPERS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function showCallScreen() {
+  document.getElementById("lobby").style.display       = "none";
+  document.getElementById("call-screen").style.display = "flex";
+}
+
+function setStatus(msg) {
+  document.getElementById("status-overlay").classList.remove("hidden");
+  document.getElementById("status-text").textContent = msg;
+}
+
+// Tap local video to swap positions (common mobile UX)
+document.getElementById("local-video")?.addEventListener("click", () => {
+  const local  = document.getElementById("local-video");
+  const remote = document.getElementById("remote-video");
+  const tmpSrc = local.srcObject;
+  local.srcObject  = remote.srcObject;
+  remote.srcObject = tmpSrc;
+});
+</script>
+
+<!--
+  ════════════════════════════════════════════════════════════════
+  DEPLOYMENT NOTES (read before going live)
+  ════════════════════════════════════════════════════════════════
+
+  1. HTTPS is REQUIRED for camera/mic access in browsers.
+     Use certbot (Let's Encrypt) on your VPS, or Cloudflare Tunnel.
+
+  2. Update CONFIG.SIGNALING_URL to your actual signaling server:
+       wss://signal.yourdomain.com
+
+  3. STUN is usually enough for most peers on 4G in India.
+     For users behind symmetric NAT (some BSNL/Jio corporate plans),
+     you need TURN. Cheapest option: coturn on a ₹500/month VPS.
+
+  4. For even lower data on very poor networks, switch to audio quality
+     preset — that's only ~9 MB/hour, comparable to a WhatsApp call.
+
+  5. The room ID is in the URL hash (#roomId=...) which browsers
+     never include in HTTP server logs — a small but real privacy win.
+  ════════════════════════════════════════════════════════════════
+-->
+</body>
+</html>

@@ -1,0 +1,14 @@
+# Netlify build config for Vyne frontend
+# The signaling server URL is injected via Netlify environment variable VYNE_SIGNAL_URL
+
+[build]
+  publish = "."
+  command = "node inject-config.js"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(*), microphone=(*)"

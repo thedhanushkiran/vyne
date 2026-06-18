@@ -1,0 +1,16 @@
+{
+  "name": "vyne-signal",
+  "version": "1.0.0",
+  "description": "Signaling server for Vyne — WebRTC peer-to-peer encrypted video calls",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "ws": "^8.17.0"
+  },
+  "license": "MIT"
+}
