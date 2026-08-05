@@ -2,46 +2,88 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Vyne — Encrypted Video Calls</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Vyne — Encrypted Peer-to-Peer Video Calls</title>
 <style>
-  /* ── Reset & Base ─────────────────────────────────────────────────────── */
+  /* ── Reset & CSS Variables ─────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg:        #0d0f14;
-    --surface:   #161922;
-    --surface2:  #1e2230;
-    --border:    #2a2f3d;
-    --accent:    #3b82f6;
-    --accent-h:  #2563eb;
-    --green:     #22c55e;
-    --red:       #ef4444;
-    --amber:     #f59e0b;
-    --text:      #e2e8f0;
-    --muted:     #64748b;
-    --radius:    12px;
-    --radius-sm: 8px;
+    --bg:          #090b10;
+    --surface:     #121620;
+    --surface-glass: rgba(18, 22, 32, 0.75);
+    --surface2:    #1a202c;
+    --border:      #262f40;
+    --accent:      #3b82f6;
+    --accent-glow: rgba(59, 130, 246, 0.35);
+    --accent-h:    #2563eb;
+    --green:       #22c55e;
+    --red:         #ef4444;
+    --amber:       #f59e0b;
+    --text:        #f1f5f9;
+    --muted:       #94a3b8;
+    --radius-lg:   20px;
+    --radius-md:   14px;
+    --radius-sm:   10px;
+    --font:        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   }
 
   html, body {
     height: 100%;
     background: var(--bg);
     color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: var(--font);
     font-size: 15px;
     line-height: 1.5;
     overflow: hidden;
+    -webkit-font-smoothing: antialiased;
   }
 
-  /* ── Layout ───────────────────────────────────────────────────────────── */
+  /* ── Application Container ─────────────────────────────────────────────── */
   #app {
     display: flex;
     flex-direction: column;
     height: 100dvh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
   }
 
-  /* ── Lobby screen ─────────────────────────────────────────────────────── */
+  /* ── Toast Notifications ────────────────────────────────────────────────── */
+  #toast-container {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    animation: toastIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(-12px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* ── Lobby Screen ───────────────────────────────────────────────────────── */
   #lobby {
     display: flex;
     flex-direction: column;
@@ -49,43 +91,51 @@
     justify-content: center;
     flex: 1;
     padding: 24px;
-    gap: 32px;
+    gap: 28px;
+    background: radial-gradient(circle at 50% 30%, #171d2b 0%, var(--bg) 70%);
   }
 
   .logo {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 22px;
-    font-weight: 700;
+    gap: 12px;
+    font-size: 26px;
+    font-weight: 800;
     letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
   }
+
   .logo-dot {
-    width: 10px; height: 10px;
+    width: 12px; height: 12px;
     border-radius: 50%;
     background: var(--accent);
-    box-shadow: 0 0 12px var(--accent);
+    box-shadow: 0 0 16px var(--accent);
   }
 
   .lobby-card {
-    background: var(--surface);
+    background: var(--surface-glass);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 28px 24px;
+    backdrop-filter: blur(16px);
+    border-radius: var(--radius-lg);
+    padding: 32px 28px;
     width: 100%;
-    max-width: 420px;
+    max-width: 440px;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 18px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
   }
 
   .lobby-card h2 {
-    font-size: 17px;
-    font-weight: 600;
+    font-size: 19px;
+    font-weight: 700;
     color: var(--text);
   }
+
   .lobby-card p {
-    font-size: 13px;
+    font-size: 13.5px;
     color: var(--muted);
     line-height: 1.6;
   }
@@ -95,49 +145,45 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 11px 20px;
-    border-radius: var(--radius-sm);
-    font-size: 14px;
+    padding: 12px 22px;
+    border-radius: var(--radius-md);
+    font-size: 14.5px;
     font-weight: 600;
     cursor: pointer;
     border: none;
-    transition: background 0.15s, transform 0.1s;
+    transition: all 0.2s ease;
     width: 100%;
+    user-select: none;
   }
-  .btn:active { transform: scale(0.98); }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: var(--accent-h); }
+
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-h) 100%);
+    color: #fff;
+    box-shadow: 0 4px 14px var(--accent-glow);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 6px 20px var(--accent-glow);
+    filter: brightness(1.08);
+  }
+
   .btn-ghost {
     background: var(--surface2);
     color: var(--text);
     border: 1px solid var(--border);
   }
   .btn-ghost:hover { background: var(--border); }
-  .btn-danger { background: var(--red); color: #fff; }
-
-  .divider {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: var(--muted);
-    font-size: 12px;
-  }
-  .divider::before, .divider::after {
-    content: "";
-    flex: 1;
-    height: 1px;
-    background: var(--border);
-  }
 
   .link-box {
     display: flex;
     align-items: center;
     gap: 8px;
-    background: var(--surface2);
+    background: #0d111a;
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
   }
+
   .link-box span {
     flex: 1;
     font-size: 13px;
@@ -145,16 +191,18 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    font-family: ui-monospace, monospace;
+    font-family: ui-monospace, SFMono-Regular, monospace;
   }
+
   .link-box button {
     background: none;
     border: none;
     cursor: pointer;
     color: var(--muted);
     font-size: 18px;
-    padding: 2px;
+    padding: 4px;
     flex-shrink: 0;
+    transition: color 0.15s;
   }
   .link-box button:hover { color: var(--text); }
 
@@ -169,25 +217,44 @@
     letter-spacing: 0.3px;
     text-transform: uppercase;
   }
-  .pill-green { background: rgba(34,197,94,0.15); color: var(--green); }
-  .pill-amber { background: rgba(245,158,11,0.15); color: var(--amber); }
-  .pill-red   { background: rgba(239,68,68,0.15);  color: var(--red);   }
-  .pill-blue  { background: rgba(59,130,246,0.15); color: var(--accent); }
+  .pill-green { background: rgba(34, 197, 94, 0.15); color: var(--green); }
+  .pill-amber { background: rgba(245, 158, 11, 0.15); color: var(--amber); }
+  .pill-red   { background: rgba(239, 68, 68, 0.15);  color: var(--red);   }
+  .pill-blue  { background: rgba(59, 130, 246, 0.15); color: var(--accent); }
+  
   .pill-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
     background: currentColor;
   }
 
-  /* ── Call screen ──────────────────────────────────────────────────────── */
+  /* Preview video box in lobby */
+  .preview-box {
+    width: 100%;
+    height: 180px;
+    border-radius: var(--radius-md);
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    border: 1px solid var(--border);
+  }
+  .preview-box video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+  }
+
+  /* ── Call Screen ────────────────────────────────────────────────────────── */
   #call-screen {
     display: none;
     flex-direction: column;
     height: 100dvh;
+    width: 100vw;
     position: relative;
+    background: #000;
   }
 
-  /* video area */
   #videos {
     flex: 1;
     position: relative;
@@ -200,28 +267,36 @@
     height: 100%;
     object-fit: cover;
     display: block;
-    background: #0a0c10;
+    background: #05070a;
   }
 
   #local-video {
     position: absolute;
-    bottom: 16px;
-    right: 16px;
-    width: 120px;
-    height: 90px;
+    bottom: 24px;
+    right: 24px;
+    width: 140px;
+    height: 105px;
     object-fit: cover;
-    border-radius: var(--radius-sm);
-    border: 2px solid var(--border);
+    border-radius: var(--radius-md);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
     background: #111;
-    cursor: pointer; /* tap to swap */
+    cursor: pointer;
     z-index: 10;
+    transition: all 0.3s ease;
+    transform: scaleX(-1);
   }
 
-  @media (max-width: 480px) {
-    #local-video { width: 90px; height: 68px; bottom: 10px; right: 10px; }
+  #local-video:hover {
+    transform: scaleX(-1) scale(1.04);
+    border-color: var(--accent);
   }
 
-  /* status overlay */
+  @media (max-width: 600px) {
+    #local-video { width: 100px; height: 75px; bottom: 16px; right: 16px; }
+  }
+
+  /* Status Overlay */
   #status-overlay {
     position: absolute;
     inset: 0;
@@ -230,120 +305,252 @@
     align-items: center;
     justify-content: center;
     gap: 16px;
-    background: rgba(13,15,20,0.85);
-    z-index: 5;
-    pointer-events: none;
+    background: rgba(9, 11, 16, 0.88);
+    backdrop-filter: blur(12px);
+    z-index: 25;
+    transition: opacity 0.3s ease;
   }
-  #status-overlay.hidden { display: none; }
+  #status-overlay.hidden { opacity: 0; pointer-events: none; }
+
   #status-text {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text);
     text-align: center;
+    padding: 0 20px;
   }
+
   .spinner {
-    width: 36px; height: 36px;
-    border: 3px solid var(--border);
+    width: 42px; height: 42px;
+    border: 3.5px solid var(--border);
     border-top-color: var(--accent);
     border-radius: 50%;
     animation: spin 0.8s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* top bar */
+  /* Top Bar */
   #topbar {
     position: absolute;
     top: 0; left: 0; right: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    background: linear-gradient(to bottom, rgba(13,15,20,0.9), transparent);
+    padding: 16px 20px;
+    background: linear-gradient(to bottom, rgba(9, 11, 16, 0.95), transparent);
     z-index: 20;
+    pointer-events: none;
   }
+  #topbar > * { pointer-events: auto; }
 
-  #call-timer {
-    font-size: 13px;
+  .topbar-badge {
+    font-size: 12.5px;
     font-weight: 600;
     font-variant-numeric: tabular-nums;
     color: var(--text);
-    background: rgba(13,15,20,0.6);
-    padding: 4px 10px;
+    background: rgba(18, 22, 32, 0.7);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 6px 14px;
     border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
-  #data-usage {
-    font-size: 11px;
-    color: var(--muted);
-    background: rgba(13,15,20,0.6);
-    padding: 4px 10px;
-    border-radius: 100px;
-  }
-
-  /* bottom controls */
+  /* Bottom Controls */
   #controls {
-    padding: 16px 16px 24px;
-    background: linear-gradient(to top, var(--bg), transparent);
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 20px 20px 28px;
+    background: linear-gradient(to top, rgba(9, 11, 16, 0.95) 40%, transparent);
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 14px;
+    z-index: 20;
+    align-items: center;
   }
 
   .ctrl-row {
     display: flex;
     justify-content: center;
-    gap: 12px;
+    gap: 14px;
     align-items: center;
+    flex-wrap: wrap;
   }
 
   .ctrl-btn {
     width: 52px; height: 52px;
     border-radius: 50%;
-    border: none;
+    border: 1px solid var(--border);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
-    transition: background 0.15s, transform 0.1s;
-    background: var(--surface2);
+    font-size: 20px;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    background: var(--surface-glass);
+    backdrop-filter: blur(12px);
     color: var(--text);
-    border: 1px solid var(--border);
     flex-shrink: 0;
+    position: relative;
   }
-  .ctrl-btn:active { transform: scale(0.93); }
-  .ctrl-btn.active { background: var(--accent); border-color: var(--accent); }
-  .ctrl-btn.end    { background: var(--red);   border-color: var(--red);    width: 60px; height: 60px; }
-  .ctrl-btn.off    { background: var(--surface2); color: var(--red); border-color: var(--red); }
+  .ctrl-btn:hover { transform: scale(1.06); background: var(--surface2); }
+  .ctrl-btn:active { transform: scale(0.94); }
+  
+  .ctrl-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .ctrl-btn.off    { background: rgba(239, 68, 68, 0.15); color: var(--red); border-color: var(--red); }
+  .ctrl-btn.end    { background: var(--red); border-color: var(--red); color: #fff; width: 58px; height: 58px; font-size: 24px; }
 
+  .badge-dot {
+    position: absolute;
+    top: 4px; right: 4px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--red);
+    border: 2px solid var(--bg);
+  }
+
+  /* Quality Selector */
   .quality-row {
     display: flex;
     justify-content: center;
-    gap: 8px;
-  }
-  .q-btn {
-    padding: 5px 14px;
+    gap: 6px;
+    background: rgba(18, 22, 32, 0.7);
+    backdrop-filter: blur(10px);
+    padding: 4px;
     border-radius: 100px;
-    font-size: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .q-btn {
+    padding: 4px 12px;
+    border-radius: 100px;
+    font-size: 11.5px;
     font-weight: 600;
-    border: 1px solid var(--border);
+    border: none;
     background: transparent;
     color: var(--muted);
     cursor: pointer;
-    transition: all 0.15s;
+    transition: all 0.15s ease;
   }
   .q-btn.selected {
     background: var(--accent);
-    border-color: var(--accent);
     color: #fff;
   }
-  .q-btn:hover:not(.selected) { color: var(--text); border-color: var(--text); }
+  .q-btn:hover:not(.selected) { color: var(--text); }
+
+  /* ── Chat Drawer ────────────────────────────────────────────────────────── */
+  #chat-drawer {
+    position: absolute;
+    top: 0; right: -360px;
+    width: 360px; height: 100%;
+    background: rgba(18, 22, 32, 0.92);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid var(--border);
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    transition: right 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #chat-drawer.open { right: 0; }
+
+  @media (max-width: 480px) {
+    #chat-drawer { width: 100vw; right: -100vw; }
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  .chat-close {
+    background: none; border: none;
+    color: var(--muted); cursor: pointer;
+    font-size: 20px;
+  }
+  .chat-close:hover { color: var(--text); }
+
+  #chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .msg-bubble {
+    max-width: 82%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 13.5px;
+    word-break: break-word;
+    line-height: 1.4;
+  }
+  .msg-bubble.me {
+    align-self: flex-end;
+    background: var(--accent);
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .msg-bubble.them {
+    align-self: flex-start;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-bottom-left-radius: 4px;
+  }
+  .msg-time {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 4px;
+    text-align: right;
+  }
+
+  .chat-input-row {
+    padding: 14px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .chat-input-row input {
+    flex: 1;
+    background: #0d111a;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: var(--text);
+    font-size: 13.5px;
+    outline: none;
+  }
+  .chat-input-row input:focus { border-color: var(--accent); }
+
+  .chat-input-row button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 0 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
 </style>
 </head>
 <body>
 <div id="app">
 
-  <!-- ══════════ LOBBY ══════════ -->
+  <!-- Toast notification banner -->
+  <div id="toast-container"></div>
+
+  <!-- ══════════ LOBBY SCREEN ══════════ -->
   <div id="lobby">
     <div class="logo">
       <div class="logo-dot"></div>
@@ -352,37 +559,52 @@
 
     <!-- Create call card -->
     <div class="lobby-card" id="create-card">
-      <h2>Start a new call</h2>
-      <p>A unique encrypted link will be generated. Share it with one person to connect.</p>
-      <button class="btn btn-primary" onclick="createCall()">🔗 Create call link</button>
+      <h2>Start a private video call</h2>
+      <p>Instant peer-to-peer WebRTC connection. No signup, no storage, no server tracking.</p>
+
+      <div class="preview-box">
+        <video id="lobby-preview" autoplay playsinline muted></video>
+      </div>
+
+      <button class="btn btn-primary" onclick="createCall()" id="btn-create">
+        ⚡ Create Call Link
+      </button>
     </div>
 
-    <!-- Shareable link (shown after creating) -->
+    <!-- Shareable link card -->
     <div class="lobby-card" id="link-card" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <h2>Your call link</h2>
-        <span class="pill pill-amber"><span class="pill-dot"></span> Waiting</span>
+        <h2>Your Call Link</h2>
+        <span class="pill pill-amber"><span class="pill-dot"></span> Waiting for partner</span>
       </div>
-      <p>Send this link to the person you want to call. The call starts when they join.</p>
+      <p>Share this unique URL with your peer. The encrypted call starts as soon as they join.</p>
       <div class="link-box">
         <span id="share-link"></span>
-        <button onclick="copyLink()" title="Copy">📋</button>
+        <button onclick="copyLink()" title="Copy to clipboard">📋</button>
       </div>
-      <button class="btn btn-ghost" onclick="shareLink()">📤 Share link</button>
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="shareLink()">📤 Share Link</button>
+        <button class="btn btn-ghost" onclick="cancelCall()">Cancel</button>
+      </div>
     </div>
 
-    <!-- Join card (shown when room ID is in URL) -->
+    <!-- Join card (when roomId is present in URL hash) -->
     <div class="lobby-card" id="join-card" style="display:none">
       <h2>You've been invited</h2>
-      <p>Tap below to join the encrypted video call. Your camera and microphone will be requested.</p>
-      <div style="display:flex;gap:8px;flex-direction:column">
-        <button class="btn btn-primary" onclick="joinCall()">📹 Join call</button>
-        <button class="btn btn-ghost"   onclick="joinAudioOnly()">🎤 Join audio only</button>
+      <p>Tap below to join the private video room. Camera and microphone access will be requested.</p>
+
+      <div class="preview-box">
+        <video id="join-preview" autoplay playsinline muted></video>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-direction:column">
+        <button class="btn btn-primary" onclick="joinCall()">📹 Join Call (Video)</button>
+        <button class="btn btn-ghost"   onclick="joinAudioOnly()">🎤 Join (Audio Only)</button>
       </div>
     </div>
 
-    <p style="font-size:11px;color:var(--muted);text-align:center;max-width:320px">
-      🔒 End-to-end encrypted via WebRTC DTLS-SRTP.&nbsp; No account needed. No recording.
+    <p style="font-size:11.5px;color:var(--muted);text-align:center;max-width:340px">
+      🔒 End-to-End Encrypted via WebRTC DTLS-SRTP • Direct P2P Media Streams
     </p>
   </div>
 
@@ -390,37 +612,55 @@
   <div id="call-screen">
     <div id="videos">
       <video id="remote-video" autoplay playsinline></video>
-      <video id="local-video"  autoplay playsinline muted></video>
+      <video id="local-video"  autoplay playsinline muted title="Tap to toggle size"></video>
 
-      <!-- Status overlay while connecting -->
+      <!-- Status Overlay -->
       <div id="status-overlay">
         <div class="spinner"></div>
-        <div id="status-text">Connecting…</div>
+        <div id="status-text">Connecting to partner…</div>
       </div>
     </div>
 
-    <!-- Top bar: timer + data counter -->
+    <!-- Top Bar -->
     <div id="topbar">
-      <div id="call-timer">00:00</div>
-      <div id="data-usage">0 MB used</div>
-      <span id="conn-quality" class="pill pill-blue"><span class="pill-dot"></span> <span id="quality-label">HD</span></span>
+      <div class="topbar-badge" id="call-timer">00:00</div>
+      <div class="topbar-badge" id="data-usage">~0 MB</div>
+      <div class="pill pill-green" id="conn-status"><span class="pill-dot"></span> <span id="quality-label">360p</span></div>
     </div>
 
-    <!-- Bottom controls -->
+    <!-- Bottom Control Bar -->
     <div id="controls">
-      <!-- Quality presets -->
+      <!-- Quality Presets -->
       <div class="quality-row">
         <button class="q-btn" id="q-audio" onclick="setQuality('audio')">Audio</button>
-        <button class="q-btn" id="q-low"   onclick="setQuality('low')">Low</button>
-        <button class="q-btn selected" id="q-med" onclick="setQuality('medium')">Medium</button>
-        <button class="q-btn" id="q-high"  onclick="setQuality('high')">High</button>
+        <button class="q-btn" id="q-low"   onclick="setQuality('low')">240p</button>
+        <button class="q-btn selected" id="q-med" onclick="setQuality('medium')">360p</button>
+        <button class="q-btn" id="q-high"  onclick="setQuality('high')">480p</button>
       </div>
 
-      <!-- Main controls -->
+      <!-- Action Buttons -->
       <div class="ctrl-row">
-        <button class="ctrl-btn" id="btn-mic"   onclick="toggleMic()"   title="Toggle mic">🎤</button>
-        <button class="ctrl-btn end"             onclick="endCall()"     title="End call">📵</button>
-        <button class="ctrl-btn" id="btn-cam"   onclick="toggleCam()"   title="Toggle camera">📷</button>
+        <button class="ctrl-btn" id="btn-mic"   onclick="toggleMic()" title="Toggle Microphone">🎤</button>
+        <button class="ctrl-btn" id="btn-cam"   onclick="toggleCam()" title="Toggle Camera">📷</button>
+        <button class="ctrl-btn" id="btn-screen" onclick="toggleScreenShare()" title="Share Screen">🖥️</button>
+        <button class="ctrl-btn" id="btn-chat"   onclick="toggleChat()" title="Open Chat">
+          💬
+          <span id="unread-dot" class="badge-dot" style="display:none"></span>
+        </button>
+        <button class="ctrl-btn end" onclick="endCall()" title="End Call">📵</button>
+      </div>
+    </div>
+
+    <!-- Encrypted Chat Drawer -->
+    <div id="chat-drawer">
+      <div class="chat-header">
+        <span>💬 Encrypted P2P Chat</span>
+        <button class="chat-close" onclick="toggleChat()">✕</button>
+      </div>
+      <div id="chat-messages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-input" placeholder="Type a private message..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+        <button onclick="sendChatMessage()">Send</button>
       </div>
     </div>
   </div>
@@ -429,81 +669,76 @@
 
 <script>
 // ═══════════════════════════════════════════════════════════════════════════
-// CONFIGURATION
+// CONFIGURATION & GLOBAL STATE
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * SIGNALING_URL: WebSocket address of your signaling server.
- * In production, replace with wss://your-domain.com:8080
- * 
- * ICE_SERVERS: STUN servers for NAT traversal.
- * For India/Chennai: Google's STUN is usually fine for direct P2P.
- * Add TURN servers here if you have them (see notes at bottom).
- */
-// SIGNALING_URL is injected at build/deploy time via Netlify env variable.
-// Fallback to localhost for local development.
-const SIGNALING_URL = "wss://vyne-usyw.onrender.com";
+// Dynamic Signaling Server URL
+function getSignalingUrl() {
+  // If injected by build/deploy environment variable
+  if (window.__VYNE_SIGNAL_URL__) {
+    return window.__VYNE_SIGNAL_URL__;
+  }
+  // If running via HTTP/HTTPS server
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProto}//${location.host}`;
+  }
+  // File protocol fallback
+  return "ws://localhost:8080";
+}
 
 const CONFIG = {
-  SIGNALING_URL: SIGNALING_URL,
-
   ICE_SERVERS: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-    // TURN fallback — uncomment and fill in when you have a coturn instance:
-    // {
-    //   urls:       "turn:your-turn-server.com:3478",
-    //   username:   "turnuser",
-    //   credential: "turnpassword"
-    // }
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" }
   ],
-
-  /**
-   * Quality presets — tuned for Indian mobile data (2G/3G/4G).
-   * All values target Opus audio (~20 kbps) + video budgets below.
-   *
-   * Rough data usage (audio + video combined):
-   *   audio-only : ~20 kbps  = ~9 MB/hour
-   *   low  240p  : ~150 kbps = ~68 MB/hour
-   *   medium 360p: ~350 kbps = ~157 MB/hour  ← default; good on 4G
-   *   high  480p : ~700 kbps = ~315 MB/hour
-   */
   QUALITY: {
-    audio:  { video: false, width: 0,   height: 0,   fps: 0,  maxVideoBps: 0,      label: "Audio" },
-    low:    { video: true,  width: 320,  height: 240,  fps: 12, maxVideoBps: 120_000, label: "240p" },
-    medium: { video: true,  width: 480,  height: 360,  fps: 20, maxVideoBps: 300_000, label: "360p" },
-    high:   { video: true,  width: 640,  height: 480,  fps: 25, maxVideoBps: 600_000, label: "480p" },
-  },
+    audio:  { video: false, width: 0,   height: 0,   fps: 0,  maxVideoBps: 0,       label: "Audio Only" },
+    low:    { video: true,  width: 320,  height: 240,  fps: 12, maxVideoBps: 150_000, label: "240p Low" },
+    medium: { video: true,  width: 480,  height: 360,  fps: 20, maxVideoBps: 350_000, label: "360p Medium" },
+    high:   { video: true,  width: 640,  height: 480,  fps: 25, maxVideoBps: 700_000, label: "480p High" }
+  }
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// STATE
-// ═══════════════════════════════════════════════════════════════════════════
-let ws          = null;   // WebSocket to signaling server
+let ws          = null;   // WebSocket
 let pc          = null;   // RTCPeerConnection
-let localStream = null;   // MediaStream (camera + mic)
-let roomId      = null;   // The room we're in
-let isCreator   = false;  // true if we created the room (makes the offer)
+let dataChannel = null;   // RTCDataChannel for peer chat
+let localStream = null;   // Camera/Mic MediaStream
+let screenStream = null;  // Screen Share MediaStream
+let roomId      = null;   // Current Room ID
+let isCreator   = false;  // Creator of room
 let currentQuality = "medium";
-let micOn  = true;
-let camOn  = true;
-let callStartTime = null;
-let timerInterval = null;
-// Rough data estimate: WebRTC doesn't expose exact bytes in all browsers,
-// so we estimate from bitrate × time.
+let micOn       = true;
+let camOn       = true;
+let isScreenSharing = false;
+
+let callStartTime  = null;
+let timerInterval  = null;
+let dataInterval   = null;
 let estimatedBytes = 0;
 
+let remoteCandidatesBuffer = []; // Buffer ICE candidates until remote SDP is set
+let unreadChatCount = 0;
+let isChatOpen = false;
+
 // ═══════════════════════════════════════════════════════════════════════════
-// LOBBY: ROOM ID DETECTION
+// INITIALIZATION & LOBBY LOGIC
 // ═══════════════════════════════════════════════════════════════════════════
 
-/**
- * Room ID is stored in the URL hash: https://site.com/#roomId=abc123
- * Using the hash means the room ID is NEVER sent to any server in HTTP logs,
- * which is a small but meaningful privacy improvement.
- */
+function showToast(msg) {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `<span>ℹ️</span> <span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
 function getRoomIdFromUrl() {
-  const hash = location.hash.slice(1); // strip '#'
+  const hash = location.hash.slice(1);
   const params = new URLSearchParams(hash);
   return params.get("roomId");
 }
@@ -512,55 +747,73 @@ function setRoomIdInUrl(id) {
   location.hash = `roomId=${id}`;
 }
 
-// Generate a cryptographically random 10-char alphanumeric room ID
 function generateRoomId() {
   const arr = new Uint8Array(8);
   crypto.getRandomValues(arr);
   return Array.from(arr, b => b.toString(36).padStart(2, "0")).join("").slice(0, 10);
 }
 
-// On page load: if a room ID is in the URL, show the "Join" card
-window.addEventListener("load", () => {
+window.addEventListener("load", async () => {
   const id = getRoomIdFromUrl();
   if (id) {
     roomId = id;
     document.getElementById("create-card").style.display = "none";
-    document.getElementById("join-card").style.display  = "block";
+    document.getElementById("join-card").style.display   = "block";
+    await startLobbyPreview("join-preview");
+  } else {
+    await startLobbyPreview("lobby-preview");
   }
 });
 
-// ═══════════════════════════════════════════════════════════════════════════
-// LOBBY ACTIONS
-// ═══════════════════════════════════════════════════════════════════════════
+async function startLobbyPreview(videoElemId) {
+  try {
+    const previewStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { width: 480, height: 360 }
+    });
+    const elem = document.getElementById(videoElemId);
+    if (elem) elem.srcObject = previewStream;
+  } catch (err) {
+    console.warn("Lobby preview unavailable:", err.message);
+  }
+}
 
 async function createCall() {
-  roomId    = generateRoomId();
+  roomId = generateRoomId();
   isCreator = true;
   setRoomIdInUrl(roomId);
 
-  const link = `${location.origin}${location.pathname}#roomId=${roomId}`;
-  document.getElementById("share-link").textContent = link;
+  const shareableUrl = `${location.origin}${location.pathname}#roomId=${roomId}`;
+  document.getElementById("share-link").textContent = shareableUrl;
   document.getElementById("create-card").style.display = "none";
-  document.getElementById("link-card").style.display  = "block";
+  document.getElementById("link-card").style.display   = "block";
 
-  // Acquire media and connect to signaling server immediately so we're ready
+  showToast("Call link generated! Waiting for partner.");
+
   await acquireMedia("medium");
   connectSignaling();
+}
+
+function cancelCall() {
+  history.pushState(null, "", location.pathname);
+  location.reload();
 }
 
 function copyLink() {
   const link = document.getElementById("share-link").textContent;
   navigator.clipboard.writeText(link).then(() => {
-    const btn = document.querySelector(".link-box button");
-    btn.textContent = "✅";
-    setTimeout(() => btn.textContent = "📋", 1500);
+    showToast("Link copied to clipboard!");
+  }).catch(() => {
+    showToast("Failed to copy link.");
   });
 }
 
 async function shareLink() {
   const link = document.getElementById("share-link").textContent;
   if (navigator.share) {
-    await navigator.share({ title: "Join my Vyne call", url: link });
+    try {
+      await navigator.share({ title: "Join my Vyne call", text: "Encrypted P2P video call link:", url: link });
+    } catch {}
   } else {
     copyLink();
   }
@@ -587,23 +840,12 @@ async function acquireMedia(quality) {
   const q = CONFIG.QUALITY[quality];
   const constraints = q.video
     ? {
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          // Opus is the standard WebRTC audio codec; these hints help Chrome
-          sampleRate: 16000,     // 16 kHz is fine for voice; saves bandwidth
-          channelCount: 1,       // mono saves ~50% audio bandwidth
-        },
-        video: {
-          width:     { ideal: q.width },
-          height:    { ideal: q.height },
-          frameRate: { ideal: q.fps, max: q.fps },
-          facingMode: "user",
-        },
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000, channelCount: 1 },
+        video: { width: { ideal: q.width }, height: { ideal: q.height }, frameRate: { ideal: q.fps, max: q.fps }, facingMode: "user" }
       }
     : {
         audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
-        video: false,
+        video: false
       };
 
   try {
@@ -611,94 +853,108 @@ async function acquireMedia(quality) {
     document.getElementById("local-video").srcObject = localStream;
     updateQualityLabel(quality);
   } catch (err) {
-    alert(`Camera/mic access failed: ${err.message}`);
+    showToast(`Camera/mic error: ${err.message}`);
+    alert(`Could not access camera/microphone: ${err.message}`);
     throw err;
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// SIGNALING (WebSocket)
+// SIGNALING & WEBRTC HANDSHAKE
 // ═══════════════════════════════════════════════════════════════════════════
 
 function connectSignaling() {
   showCallScreen();
-  setStatus("Connecting to server…");
+  setStatus("Connecting to signaling server…");
 
-  ws = new WebSocket(CONFIG.SIGNALING_URL);
+  const url = getSignalingUrl();
+  console.log("Connecting to WebSocket:", url);
+  ws = new WebSocket(url);
 
   ws.onopen = () => {
-    setStatus("Waiting for partner…");
+    setStatus("Connected! Joining room…");
     ws.send(JSON.stringify({ type: "join", roomId }));
   };
 
   ws.onmessage = async (evt) => {
-    const msg = JSON.parse(evt.data);
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
 
     switch (msg.type) {
-
-      // Server confirms we joined; also tells us if we're peer0 or peer1
       case "joined":
         isCreator = (msg.peerId === "peer0");
-        // peer0 waits for peer1 to arrive before creating the offer
-        if (!isCreator) {
-          // peer1: create the WebRTC connection and wait for an offer
+        if (isCreator) {
+          setStatus("Waiting for partner to open link…");
+        } else {
+          setStatus("Partner present! Setting up encryption…");
           await createPeerConnection();
         }
         break;
 
-      // peer0 gets this when peer1 joins — now it's time to make the offer
       case "peer-joined":
-        setStatus("Partner joined! Establishing encrypted channel…");
+        setStatus("Partner joined! Initializing encrypted connection…");
+        showToast("Partner joined the room!");
         await createPeerConnection();
         await sendOffer();
         break;
 
-      // peer1 receives the offer from peer0
       case "offer":
         await handleOffer(msg.sdp);
         break;
 
-      // peer0 receives peer1's answer
       case "answer":
-        await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: msg.sdp }));
-        break;
-
-      // Both sides exchange ICE candidates
-      case "ice-candidate":
-        if (msg.candidate) {
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
-          } catch {}
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: msg.sdp }));
+          await processBufferedIceCandidates();
         }
         break;
 
-      // Partner muted/unmuted, toggled camera
+      case "ice-candidate":
+        if (msg.candidate) {
+          const candidate = new RTCIceCandidate(msg.candidate);
+          if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+            try { await pc.addIceCandidate(candidate); } catch (e) { console.warn("ICE error:", e); }
+          } else {
+            remoteCandidatesBuffer.push(candidate);
+          }
+        }
+        break;
+
       case "media-state":
-        // Could show a UI indicator — left as an exercise
-        console.log("Partner media state:", msg.state);
+        if (msg.state) {
+          if (msg.state.micOn === false) showToast("Partner muted their mic");
+          if (msg.state.camOn === false) showToast("Partner turned off their camera");
+        }
+        break;
+
+      case "screen-share-state":
+        if (msg.isSharing) {
+          showToast("Partner started screen sharing");
+        } else {
+          showToast("Partner stopped screen sharing");
+        }
         break;
 
       case "peer-left":
         setStatus("Partner disconnected.");
+        showToast("Partner left the call.");
         setTimeout(endCall, 3000);
         break;
 
       case "error":
-        console.error("Signaling error:", msg.message);
+        showToast(`Signaling error: ${msg.message}`);
         setStatus(`Error: ${msg.message}`);
         break;
     }
   };
 
-  ws.onerror = (e) => {
-    setStatus("Connection error — check your internet.");
-    console.error("WebSocket error", e);
+  ws.onerror = (err) => {
+    console.error("Signaling error:", err);
+    setStatus("Connection error — please check network.");
   };
 
   ws.onclose = () => {
-    if (pc && pc.connectionState !== "closed") {
-      setStatus("Signaling disconnected.");
-    }
+    console.log("WebSocket closed");
   };
 }
 
@@ -707,92 +963,107 @@ function connectSignaling() {
 // ═══════════════════════════════════════════════════════════════════════════
 
 async function createPeerConnection() {
+  if (pc) return;
+
   pc = new RTCPeerConnection({ iceServers: CONFIG.ICE_SERVERS });
 
-  // Add all local tracks
-  localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  // Add tracks
+  if (localStream) {
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  }
 
-  // ICE candidate → send to partner via signaling
+  // Setup DataChannel for encrypted chat
+  if (isCreator) {
+    dataChannel = pc.createDataChannel("chat");
+    setupDataChannel(dataChannel);
+  } else {
+    pc.ondatachannel = (event) => {
+      dataChannel = event.channel;
+      setupDataChannel(dataChannel);
+    };
+  }
+
+  // ICE candidates
   pc.onicecandidate = ({ candidate }) => {
-    if (candidate) {
+    if (candidate && ws?.readyState === WebSocket.OPEN) {
       ws.send(JSON.stringify({ type: "ice-candidate", candidate }));
     }
   };
 
-  // Connection state changes
+  // Connection states
   pc.onconnectionstatechange = () => {
-    console.log("Connection state:", pc.connectionState);
+    console.log("WebRTC Connection State:", pc.connectionState);
     switch (pc.connectionState) {
       case "connected":
         onCallConnected();
         break;
       case "disconnected":
       case "failed":
-        setStatus("Connection lost. Trying to reconnect…");
+        setStatus("Reconnecting encrypted media stream…");
         break;
     }
   };
 
-  // ICE state — useful for debugging
-  pc.oniceconnectionstatechange = () => {
-    console.log("ICE state:", pc.iceConnectionState);
-  };
-
-  // Remote track arrives — display remote video
-  pc.ontrack = ({ streams }) => {
-    document.getElementById("remote-video").srcObject = streams[0];
+  // Remote tracks
+  pc.ontrack = (event) => {
+    console.log("Remote track received:", event.track.kind);
+    const remoteVideo = document.getElementById("remote-video");
+    if (event.streams && event.streams[0]) {
+      remoteVideo.srcObject = event.streams[0];
+    } else {
+      let stream = remoteVideo.srcObject;
+      if (!stream) {
+        stream = new MediaStream();
+        remoteVideo.srcObject = stream;
+      }
+      stream.addTrack(event.track);
+    }
   };
 }
 
 async function sendOffer() {
   const offer = await pc.createOffer({
     offerToReceiveAudio: true,
-    offerToReceiveVideo: currentQuality !== "audio",
+    offerToReceiveVideo: currentQuality !== "audio"
   });
   await pc.setLocalDescription(offer);
-
-  // Apply bitrate constraints to the outgoing video sender
   await applyBitrateConstraints(currentQuality);
-
   ws.send(JSON.stringify({ type: "offer", sdp: pc.localDescription.sdp }));
 }
 
 async function handleOffer(sdp) {
+  await createPeerConnection();
   await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp }));
+  await processBufferedIceCandidates();
+
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
   await applyBitrateConstraints(currentQuality);
   ws.send(JSON.stringify({ type: "answer", sdp: pc.localDescription.sdp }));
 }
 
-/**
- * Apply bitrate constraints to the video RTCRtpSender.
- * This is the key knob for data-efficiency on mobile.
- *
- * sendEncodings.maxBitrate caps the encoder at the specified bps.
- * Combined with low resolution + fps, this dramatically reduces data usage.
- */
+async function processBufferedIceCandidates() {
+  while (remoteCandidatesBuffer.length > 0) {
+    const candidate = remoteCandidatesBuffer.shift();
+    try { await pc.addIceCandidate(candidate); } catch (e) { console.warn("Buffered ICE add error:", e); }
+  }
+}
+
 async function applyBitrateConstraints(quality) {
   if (!pc) return;
   const q = CONFIG.QUALITY[quality];
   const senders = pc.getSenders();
+
   for (const sender of senders) {
     if (sender.track?.kind === "video") {
       const params = sender.getParameters();
-      if (!params.encodings || params.encodings.length === 0) {
-        params.encodings = [{}];
-      }
+      if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
       params.encodings[0].maxBitrate = q.maxVideoBps;
-      // scaleResolutionDownBy: 1 = no downscaling; >1 scales down
-      params.encodings[0].scaleResolutionDownBy = 1;
       try { await sender.setParameters(params); } catch {}
     }
     if (sender.track?.kind === "audio") {
       const params = sender.getParameters();
-      if (!params.encodings || params.encodings.length === 0) {
-        params.encodings = [{}];
-      }
-      // Cap audio at 24 kbps — Opus sounds great at this for voice
+      if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
       params.encodings[0].maxBitrate = 24_000;
       try { await sender.setParameters(params); } catch {}
     }
@@ -800,17 +1071,19 @@ async function applyBitrateConstraints(quality) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CALL CONNECTED
+// CALL CONNECTED & METRICS
 // ═══════════════════════════════════════════════════════════════════════════
 
 function onCallConnected() {
   document.getElementById("status-overlay").classList.add("hidden");
+  showToast("Encrypted call connected!");
   callStartTime = Date.now();
   startTimer();
   startDataEstimator();
 }
 
 function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
     const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
@@ -820,10 +1093,218 @@ function startTimer() {
 }
 
 function startDataEstimator() {
-  // Estimate bytes consumed from current quality preset's bitrate
-  setInterval(() => {
+  if (dataInterval) clearInterval(dataInterval);
+  dataInterval = setInterval(() => {
     const q = CONFIG.QUALITY[currentQuality];
-    // total bitrate ≈ maxVideoBps + 24000 audio
+    const bps = q.maxVideoBps + 24_000;
+    estimatedBytes += bps / 8;
+    const mb = (estimatedBytes / 1_000_000).toFixed(1);
+    document.getElementById("data-usage").textContent = `~${mb} MB`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTROLS & FEATURES
+// ═══════════════════════════════════════════════════════════════════════════
+
+function toggleMic() {
+  micOn = !micOn;
+  if (localStream) {
+    localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  }
+  const btn = document.getElementById("btn-mic");
+  btn.textContent = micOn ? "🎤" : "🔇";
+  btn.classList.toggle("off", !micOn);
+  sendMediaState();
+}
+
+function toggleCam() {
+  camOn = !camOn;
+  if (localStream) {
+    localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  }
+  const btn = document.getElementById("btn-cam");
+  btn.textContent = camOn ? "📷" : "🚫";
+  btn.classList.toggle("off", !camOn);
+  sendMediaState();
+}
+
+async function toggleScreenShare() {
+  if (isScreenSharing) {
+    stopScreenShare();
+  } else {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+      if (sender) {
+        await sender.replaceTrack(screenTrack);
+      }
+
+      document.getElementById("local-video").srcObject = screenStream;
+      document.getElementById("btn-screen").classList.add("active");
+      isScreenSharing = true;
+      showToast("Started screen sharing");
+      notifyScreenShareState(true);
+
+      screenTrack.onended = () => stopScreenShare();
+    } catch (err) {
+      showToast("Screen share cancelled");
+    }
+  }
+}
+
+async function stopScreenShare() {
+  if (!isScreenSharing) return;
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+  const camTrack = localStream?.getVideoTracks()[0];
+  const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+  if (sender && camTrack) {
+    await sender.replaceTrack(camTrack);
+  }
+
+  document.getElementById("local-video").srcObject = localStream;
+  document.getElementById("btn-screen").classList.remove("active");
+  isScreenSharing = false;
+  showToast("Stopped screen sharing");
+  notifyScreenShareState(false);
+}
+
+function notifyScreenShareState(isSharing) {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "screen-share-state", isSharing }));
+  }
+}
+
+async function setQuality(q) {
+  document.querySelectorAll(".q-btn").forEach(b => b.classList.remove("selected"));
+  document.getElementById(`q-${q}`).classList.add("selected");
+
+  currentQuality = q;
+  updateQualityLabel(q);
+
+  if (q === "audio") {
+    if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = false);
+  } else {
+    if (localStream && camOn) localStream.getVideoTracks().forEach(t => t.enabled = true);
+  }
+
+  await applyBitrateConstraints(q);
+}
+
+function updateQualityLabel(q) {
+  document.getElementById("quality-label").textContent = CONFIG.QUALITY[q].label;
+}
+
+function sendMediaState() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "media-state", state: { micOn, camOn } }));
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENCRYPTED P2P CHAT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setupDataChannel(channel) {
+  channel.onopen = () => console.log("DataChannel open");
+  channel.onmessage = (e) => {
+    appendChatMessage(e.data, "them");
+    if (!isChatOpen) {
+      unreadChatCount++;
+      document.getElementById("unread-dot").style.display = "block";
+      showToast("New chat message received");
+    }
+  };
+}
+
+function toggleChat() {
+  const drawer = document.getElementById("chat-drawer");
+  isChatOpen = !isChatOpen;
+  drawer.classList.toggle("open", isChatOpen);
+
+  if (isChatOpen) {
+    unreadChatCount = 0;
+    document.getElementById("unread-dot").style.display = "none";
+    document.getElementById("chat-input").focus();
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (dataChannel && dataChannel.readyState === "open") {
+    dataChannel.send(text);
+    appendChatMessage(text, "me");
+    input.value = "";
+  } else {
+    showToast("Chat connection not ready");
+  }
+}
+
+function appendChatMessage(text, sender) {
+  const container = document.getElementById("chat-messages");
+  const bubble = document.createElement("div");
+  bubble.className = `msg-bubble ${sender}`;
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  bubble.innerHTML = `${escapeHtml(text)} <div class="msg-time">${timeStr}</div>`;
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEARDOWN & CLEANUP
+// ═══════════════════════════════════════════════════════════════════════════
+
+function endCall() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "leave" }));
+    ws.close();
+  }
+  if (dataChannel) { dataChannel.close(); dataChannel = null; }
+  if (pc) { pc.close(); pc = null; }
+
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+
+  clearInterval(timerInterval);
+  clearInterval(dataInterval);
+
+  history.pushState(null, "", location.pathname);
+  location.reload();
+}
+
+function showCallScreen() {
+  document.getElementById("lobby").style.display       = "none";
+  document.getElementById("call-screen").style.display = "flex";
+}
+
+function setStatus(msg) {
+  const overlay = document.getElementById("status-overlay");
+  overlay.classList.remove("hidden");
+  document.getElementById("status-text").textContent = msg;
+}
+</script>
+</body>
+</html>
     const bps = q.maxVideoBps + 24_000;
     estimatedBytes += bps / 8; // bits → bytes
     const mb = (estimatedBytes / 1_000_000).toFixed(1);
