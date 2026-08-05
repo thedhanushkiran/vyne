@@ -1,240 +1,155 @@
 # 🎥 Vyne
 
 <p align="center">
-  <strong>Encrypted peer-to-peer video calls.</strong><br>
-  No account. No recording. No tracking.
+  <strong>Encrypted Peer-to-Peer Video Calls & Instant Messaging</strong><br>
+  No Sign-up • No Data Logging • Zero Server-side Media Storage
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/WebRTC-P2P-success" alt="WebRTC">
-  <img src="https://img.shields.io/badge/Node.js-Backend-brightgreen" alt="Node.js">
-  <img src="https://img.shields.io/badge/License-MIT-blue" alt="MIT">
-  <img src="https://img.shields.io/badge/Privacy-First-black" alt="Privacy">
+  <a href="https://github.com/thedhanushkiran/vyne"><img src="https://img.shields.io/badge/WebRTC-P2P_Media-blue?style=for-the-badge&logo=webrtc" alt="WebRTC"></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-Signaling_Backend-339933?style=for-the-badge&logo=nodedotjs" alt="Node.js"></a>
+  <a href="https://github.com/thedhanushkiran/vyne/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Privacy-Zero_Tracking-black?style=for-the-badge" alt="Privacy First">
 </p>
 
 ---
 
-## 🚀 What is Vyne?
+## ⚡ Overview
 
-Vyne is a lightweight WebRTC-powered video calling platform that allows two people to connect instantly using a shared link.
+**Vyne** is an end-to-end encrypted, lightweight WebRTC video calling and instant messaging platform designed for instant, high-privacy peer-to-peer communication. 
 
-No sign-up. No downloads. No tracking.
-
-The signaling server only assists with the initial connection handshake. Once connected, audio and video streams travel directly between peers.
+Users connect instantly by sharing a unique room link. Audio, video, screen share, and text chat streams flow **directly peer-to-peer (P2P)** between browser clients. The Node.js signaling server only facilitates the initial SDP offer/answer and ICE candidate exchange before idling.
 
 ```text
-Browser A  ◄────────────►  Browser B
-            Direct P2P
+                     Initial Handshake (SDP/ICE)
+                            ┌───────────┐
+                            │ Signaling │
+                            │  Server   │
+                            └─────┬─────┘
+                                  │
+         ┌────────────────────────┴────────────────────────┐
+         │                                                 │
+         ▼                                                 ▼
+  ┌──────────────┐          Direct P2P Media         ┌──────────────┐
+  │  Browser A   │ ◄───────────────────────────────► │  Browser B   │
+  └──────────────┘   Encrypted Audio/Video/Chat/Data  └──────────────┘
 ```
 
 ---
 
-## ✨ Features
+## ✨ Key Features
 
-- 🔒 End-to-end encrypted media
-- ⚡ Instant call links
-- 👤 No accounts required
-- 📱 Mobile-friendly interface
-- 🌐 Works in modern browsers
-- 📶 Bandwidth optimized presets
-  - Audio Only
-  - 240p
-  - 360p
-  - 480p
-- 🚫 No ads
-- 🚫 No tracking
-- 🚫 No analytics
-- 🚫 No recordings
-
----
-
-## 🏗 Architecture
-
-```text
-           WebRTC Offer / Answer
-                    │
-                    ▼
-
-        ┌────────────────────┐
-        │  Signaling Server  │
-        │  Node.js + WS      │
-        └────────────────────┘
-                    ▲
-                    │
-
-After Connection
-
-┌───────────────┐      P2P Media      ┌───────────────┐
-│   Browser A   │ ◄────────────────► │   Browser B   │
-└───────────────┘                     └───────────────┘
-```
-
-The signaling server never processes video or audio streams.
+- 🔒 **End-to-End Encrypted Media**: Secured via DTLS-SRTP WebRTC protocols directly between peers.
+- 💬 **Encrypted P2P Text Chat**: Integrated real-time messaging via WebRTC `RTCDataChannel` (zero server relaying).
+- 🖥️ **Screen Sharing**: One-click display media sharing (`getDisplayMedia()`) with seamless camera track swap.
+- 📶 **Bandwidth-Optimized Presets**:
+  - **Audio Only**: ~24 kbps (~9 MB/hour)
+  - **240p Low**: ~150 kbps (~68 MB/hour)
+  - **360p Medium**: ~350 kbps (~157 MB/hour)
+  - **480p High**: ~700 kbps (~315 MB/hour)
+- 📊 **Real-time Metrics**: Integrated call timer, live estimated data consumption meter, and status badges.
+- 👤 **Zero Friction**: No accounts, passwords, downloads, or sign-ups required.
+- 🛡️ **Privacy Architecture**: Room IDs are kept in URL hash fragments (`#roomId=...`), preventing room tokens from appearing in server access logs.
+- 🎨 **Modern Responsive UI**: Dark glassmorphic interface built with Vanilla CSS and responsive controls for desktop, tablet, and mobile browsers.
 
 ---
 
 ## 🛠 Tech Stack
 
-| Layer | Technology |
-|--------|------------|
-| Frontend | HTML, CSS, JavaScript |
-| Signaling | Node.js |
-| Transport | WebSocket |
-| Media | WebRTC |
-| Frontend Hosting | Netlify |
-| Backend Hosting | Render |
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | HTML5, CSS3, JavaScript (ES2024) | Modern, dependency-free client application |
+| **Backend & Signaling** | Node.js, `ws` (WebSocket) | Lightweight HTTP static file server + WebRTC signaling relay |
+| **Peer Connection** | WebRTC (`RTCPeerConnection`, `RTCDataChannel`) | Direct audio, video, screen share, and text data transport |
+| **NAT Traversal** | Google Public STUN | Standard ICE candidate gathering for P2P connection setup |
 
 ---
 
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```text
 vyne/
-│
-├── public/
-│   ├── index.html
-│   ├── app.js
-│   └── styles.css
-│
-├── server/
-│   └── signaling.js
-│
-├── package.json
-├── README.md
-└── .gitignore
+├── index.html        # Single-page client UI, WebRTC engine & P2P chat
+├── server.js          # Combined HTTP static server & WebSocket signaling backend
+├── inject-config.js   # Build-time environment variable injection utility
+├── netlify.toml       # Deployment configuration for Netlify
+├── package.json       # Project dependencies & scripts
+├── README.md          # Repository documentation
+└── .gitignore         # Git ignore policies
 ```
 
 ---
 
-## 🚀 Local Development
+## 🚀 Quick Start (Local Development)
 
-### Clone Repository
+### 1. Prerequisites
+Ensure you have **Node.js (>= 18)** installed on your machine.
+
+### 2. Installation
+Clone the repository and install dependencies:
 
 ```bash
 git clone https://github.com/thedhanushkiran/vyne.git
 cd vyne
-```
-
-### Install Dependencies
-
-```bash
 npm install
 ```
 
-### Start Signaling Server
+### 3. Start the Server
+Launch the unified HTTP & WebSocket server:
 
 ```bash
 npm start
 ```
 
-Server:
+### 4. Access Vyne
+Open your browser and navigate to:
+- **Application**: [http://localhost:8080](http://localhost:8080)
+- **Health Check**: [http://localhost:8080/health](http://localhost:8080/health)
 
-```text
-http://localhost:8080
-```
-
-Health Check:
-
-```text
-http://localhost:8080/health
-```
-
-### Run Frontend
-
-```bash
-npx serve .
-```
-
-or simply open:
-
-```text
-index.html
-```
+> **Testing Multi-Peer Calls**: Open `http://localhost:8080` in two separate browser windows (or incognito windows) to test call creation, link joining, media streaming, screen sharing, and P2P chat.
 
 ---
 
-## 🌍 Deployment
+## 🌍 Deployment Guide
 
-### Backend → Render
+### Deployment Option A: Monolithic Node.js Hosting (Render, Railway, VPS)
+Deploy `server.js` directly to any Node.js host.
 
-1. Create a new Web Service
-2. Connect your GitHub repository
-3. Configure:
+1. **Build Command**: `npm install`
+2. **Start Command**: `npm start`
+3. **Environment Variable**: `PORT=8080` (or host provided port)
 
-```text
-Build Command: npm install
-Start Command: npm start
-Runtime: Node.js
-```
+### Deployment Option B: Decoupled Netlify + Signaling Backend
 
-4. Deploy
-
-WebSocket URL:
-
-```text
-wss://your-app.onrender.com
-```
+1. **Backend**: Deploy `server.js` to Render/Railway to get your WebSocket signaling URL (`wss://your-backend.onrender.com`).
+2. **Frontend (Netlify)**:
+   - Connect the repository to Netlify.
+   - Set environment variable:
+     ```env
+     VYNE_SIGNAL_URL=wss://your-backend.onrender.com
+     ```
+   - Netlify automatically executes `node inject-config.js` during build (configured in `netlify.toml`).
 
 ---
 
-### Frontend → Netlify
+## 🔐 Security & Privacy Architecture
 
-Add Environment Variable:
-
-```env
-VYNE_SIGNAL_URL=wss://your-app.onrender.com
-```
-
-Deploy.
-
----
-
-## 🔐 Privacy
-
-### Room IDs
-
-Room IDs are stored in URL fragments.
-
-Example:
-
-```text
-https://vyne.app/#my-room
-```
-
-Hash fragments are never included in HTTP requests.
-
-### Media
-
-All media is transmitted peer-to-peer.
-
-```text
-User A ◄──────────► User B
-```
-
-The signaling server never receives video or audio.
-
-### Data Collection
-
-Vyne stores:
-
-- No user accounts
-- No analytics
-- No cookies
-- No recordings
-- No personal information
+- **Zero Logs**: The signaling server processes temporary JSON handshake payloads (`offer`, `answer`, `ice-candidate`). It does **not** log or store IP mapping or session content.
+- **URL Hash Fragments**: Room IDs are specified in the hash portion of the URL (e.g. `https://vyne.app/#roomId=abc123`). Browsers never transmit hash fragments in HTTP requests.
+- **Direct Encryption**: Media and data streams are encrypted end-to-end using standard WebRTC DTLS (Datagram Transport Layer Security) and SRTP (Secure Real-time Transport Protocol).
 
 ---
 
 ## 🗺 Roadmap
 
-- [ ] Screen Sharing
-- [ ] Text Chat
-- [ ] File Transfer
-- [ ] Dark Mode
-- [ ] Progressive Web App (PWA)
-- [ ] TURN Server Fallback
-- [ ] Multiple Languages
-- [ ] Call Statistics
+- [x] WebRTC End-to-End Encrypted Video/Audio
+- [x] P2P Encrypted Text Chat (`RTCDataChannel`)
+- [x] Screen Sharing (`getDisplayMedia()`)
+- [x] Dynamic Bitrate & Resolution Presets
+- [x] Health Check & Static Server Integration
+- [ ] Multi-party Group Calls (SFU Mesh Network)
+- [ ] P2P File Transfer over DataChannels
+- [ ] Custom TURN Server Integration for Strict Symmetric NATs
 
 ---
 
