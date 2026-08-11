@@ -1,0 +1,13 @@
+{
+  "name": "Vyne — Private Rooms",
+  "short_name": "Vyne",
+  "description": "Private peer-to-peer video rooms and chat.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#050713",
+  "theme_color": "#070a16",
+  "icons": [
+    {"src":"/icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}
+  ]
+}

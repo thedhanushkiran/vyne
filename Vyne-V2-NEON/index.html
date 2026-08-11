@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#070a16">
+<meta name="description" content="Vyne — private rooms, real talks. P2P video and chat with no accounts.">
+<link rel="manifest" href="/manifest.webmanifest">
+<title>Vyne — Private Rooms. Real Talks.</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050713;--panel:#090d1c;--panel2:#0d1225;--line:rgba(126,91,255,.28);--purple:#8b5cf6;--violet:#a855f7;--blue:#2563eb;--cyan:#22d3ee;--pink:#ec4899;--green:#22c55e;--red:#ff3b5f;--text:#f8fafc;--muted:#9aa6c3;--dim:#66708c;--glow:0 0 34px rgba(139,92,246,.25);--font:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+html,body{width:100%;height:100%;background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;-webkit-font-smoothing:antialiased}
+body{background:radial-gradient(circle at 70% 10%,rgba(76,29,149,.18),transparent 34%),radial-gradient(circle at 10% 80%,rgba(37,99,235,.12),transparent 30%),#050713}
+button,input,select{font:inherit}button{cursor:pointer}a{color:inherit;text-decoration:none}
+#app{width:100%;height:100%;position:relative;overflow:hidden}
+#toast-container{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:9px;pointer-events:none}.toast{background:rgba(8,12,28,.9);border:1px solid rgba(168,85,247,.38);box-shadow:0 12px 42px rgba(0,0,0,.45),0 0 24px rgba(139,92,246,.16);backdrop-filter:blur(18px);padding:11px 17px;border-radius:999px;font-size:13px;display:flex;gap:8px;align-items:center;animation:toastIn .25s ease}
+@keyframes toastIn{from{opacity:0;transform:translateY(-8px) scale(.96)}to{opacity:1;transform:none}}
+.logo{display:flex;align-items:center;gap:10px;font-size:21px;font-weight:850;letter-spacing:.12em}.logo-mark{width:32px;height:32px;filter:drop-shadow(0 0 12px rgba(168,85,247,.55))}.logo small{display:block;font-size:8px;color:#8f99b3;letter-spacing:.28em;font-weight:600;margin-top:-3px}
+#lobby{height:100%;overflow:auto;scroll-behavior:smooth;background:radial-gradient(circle at 45% 12%,rgba(59,130,246,.16),transparent 28%),linear-gradient(180deg,#050713,#070a16 48%,#050713)}
+.site-nav{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 34px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(4,7,18,.65);backdrop-filter:blur(18px);position:sticky;top:0;z-index:50}.nav-links{display:flex;gap:30px;color:#b6bed2;font-size:13px}.nav-links a:hover{color:#fff}.nav-actions{display:flex;align-items:center;gap:12px}.secure-pill,.system-pill{border:1px solid rgba(139,92,246,.3);background:rgba(10,14,31,.75);border-radius:999px;padding:8px 13px;color:#aeb8d0;font-size:11px;display:flex;align-items:center;gap:7px}.dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 10px #22c55e}
+.btn{border:1px solid transparent;border-radius:12px;padding:12px 19px;font-weight:750;font-size:13px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.2s;white-space:nowrap}.btn-primary{background:linear-gradient(135deg,#6d28d9,#c026d3);color:#fff;box-shadow:0 10px 30px rgba(139,92,246,.28)}.btn-primary:hover{transform:translateY(-1px);box-shadow:0 14px 38px rgba(168,85,247,.4)}.btn-ghost{background:rgba(9,13,28,.78);border-color:rgba(126,91,255,.38);color:#f3f4ff}.btn-ghost:hover{background:rgba(19,25,48,.9);border-color:rgba(168,85,247,.65)}
+.hero{max-width:1500px;margin:0 auto;padding:42px 34px 30px;display:grid;grid-template-columns:1.35fr 1fr;gap:24px}.hero-copy{min-height:330px;display:flex;flex-direction:column;justify-content:center;padding:20px 12px}.eyebrow{color:#c3b5fd;font-size:11px;letter-spacing:.24em;font-weight:800;margin-bottom:15px}.hero h1{font-size:clamp(44px,5.4vw,76px);line-height:.97;letter-spacing:-.055em;max-width:720px}.gradient{background:linear-gradient(90deg,#fff 15%,#b794f6 55%,#d946ef 90%);-webkit-background-clip:text;background-clip:text;color:transparent}.hero-copy p{max-width:590px;color:#aeb8d0;margin:20px 0 24px;font-size:15px;line-height:1.7}.hero-actions{display:flex;gap:12px;flex-wrap:wrap}.hero-art{min-height:330px;border:1px solid rgba(126,91,255,.22);border-radius:28px;overflow:hidden;position:relative;background:linear-gradient(145deg,rgba(16,22,50,.9),rgba(3,7,19,.9));box-shadow:var(--glow)}.hero-art::before{content:"";position:absolute;inset:-30%;background:radial-gradient(circle at 55% 40%,rgba(59,130,246,.38),transparent 25%),radial-gradient(circle at 65% 65%,rgba(168,85,247,.35),transparent 24%);filter:blur(25px)}.hero-art::after{content:"";position:absolute;inset:0;background:linear-gradient(135deg,transparent 35%,rgba(255,255,255,.04),transparent 70%);pointer-events:none}.hero-orbit{position:absolute;width:390px;height:390px;border:1px solid rgba(139,92,246,.35);border-radius:50%;right:-80px;top:-55px;transform:rotate(-20deg);box-shadow:0 0 50px rgba(139,92,246,.12)}.hero-orbit::after{content:"";position:absolute;width:120px;height:120px;border-radius:50%;right:110px;top:90px;background:radial-gradient(circle,#d946ef 0,#7c3aed 28%,#2563eb 55%,transparent 70%);filter:blur(8px);opacity:.85}.hero-brand{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2}.hero-brand .logo-mark{width:105px;height:105px}.hero-brand strong{font-size:45px;letter-spacing:.22em;margin-left:.22em}.hero-brand span{font-size:10px;letter-spacing:.38em;color:#a8b1c9;margin-top:6px}
+.feature-grid{max-width:1500px;margin:0 auto;padding:0 34px 30px;display:grid;grid-template-columns:repeat(6,1fr);gap:12px}.feature-card{min-height:135px;padding:18px;border:1px solid rgba(126,91,255,.22);border-radius:17px;background:linear-gradient(145deg,rgba(11,16,34,.92),rgba(6,9,21,.82));box-shadow:0 15px 40px rgba(0,0,0,.16)}.feature-icon{font-size:23px;margin-bottom:14px}.feature-card h3{font-size:13px;margin-bottom:5px}.feature-card p{font-size:10.5px;color:#8994af;line-height:1.5}
+.lobby-workspace{max-width:1500px;margin:0 auto;padding:0 34px 34px;display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:14px}.lobby-card{background:linear-gradient(145deg,rgba(9,14,30,.96),rgba(5,8,19,.94));border:1px solid rgba(126,91,255,.24);border-radius:22px;padding:24px;box-shadow:0 20px 70px rgba(0,0,0,.25)}.workspace-main{min-height:420px}.workspace-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}.workspace-head h2{font-size:18px}.muted{color:#8792ac;font-size:12px}.preview-box{height:275px;border-radius:17px;overflow:hidden;background:#02040b;border:1px solid rgba(126,91,255,.24);position:relative}.preview-box video,.preview-video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.preview-badge{position:absolute;left:14px;bottom:14px;background:rgba(4,7,18,.72);backdrop-filter:blur(10px);padding:7px 10px;border-radius:9px;font-size:11px;border:1px solid rgba(255,255,255,.08)}.lobby-actions{display:flex;gap:10px;margin-top:14px}.lobby-actions .btn{flex:1}.link-box{display:flex;align-items:center;gap:8px;background:#050815;border:1px solid rgba(126,91,255,.24);border-radius:12px;padding:11px 12px;margin:14px 0}.link-box span{flex:1;color:#b9a7ff;font-family:ui-monospace,SFMono-Regular,monospace;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.link-box button{background:none;border:0;color:#aab4cd;font-size:16px}.side-stack{display:flex;flex-direction:column;gap:14px}.side-card{padding:18px;border:1px solid rgba(126,91,255,.22);border-radius:18px;background:rgba(8,12,28,.9)}.side-card h3{font-size:14px;margin-bottom:9px}.side-card p{font-size:11px;color:#8d98b1;line-height:1.6}.check-list{list-style:none;display:grid;gap:9px;margin-top:13px}.check-list li{font-size:11px;color:#b3bdd2}.check-list li::before{content:"✓";color:#22c55e;margin-right:8px}.install-card{display:flex;flex-direction:column;gap:12px}.install-card .btn{width:100%}
+#create-card,#link-card,#join-card{display:block}.pill{display:inline-flex;align-items:center;gap:6px;font-size:10px;padding:5px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.08)}.pill-amber{color:#fbbf24;background:rgba(245,158,11,.1)}.pill-green{color:#4ade80;background:rgba(34,197,94,.1)}.pill-dot{width:6px;height:6px;border-radius:50%;background:currentColor}.privacy-note{font-size:10px;color:#69738d;line-height:1.5;text-align:center;margin-top:9px}.select-control{width:100%;background:#050815;border:1px solid rgba(126,91,255,.24);color:#dce2f2;border-radius:11px;padding:11px 12px;outline:0}.select-control:focus{border-color:#a855f7}
+.site-footer{max-width:1500px;margin:0 auto;padding:25px 34px 35px;border-top:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;gap:20px;color:#707b95;font-size:11px}.footer-links{display:flex;gap:20px}
+#call-screen{display:none;width:100%;height:100%;position:relative;background:#02040a;overflow:hidden}.call-bg{position:absolute;inset:0;background:radial-gradient(circle at 50% 20%,rgba(37,99,235,.15),transparent 35%),#02040a}.call-top{position:absolute;top:0;left:0;right:0;z-index:30;height:76px;padding:14px 20px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(#040714e8,transparent);pointer-events:none}.call-top>*{pointer-events:auto}.call-room{display:flex;align-items:center;gap:10px}.call-room-code{padding:8px 12px;border:1px solid rgba(126,91,255,.3);background:rgba(6,9,22,.78);backdrop-filter:blur(12px);border-radius:10px;font-size:11px;color:#b7a8ff}.call-badges{display:flex;gap:8px}.topbar-badge{font-size:10px;color:#aab4cd;background:rgba(7,11,24,.78);border:1px solid rgba(255,255,255,.08);padding:7px 10px;border-radius:999px;backdrop-filter:blur(12px)}.privacy-status{position:absolute;left:20px;top:76px;z-index:31;display:flex;align-items:center;gap:7px;padding:7px 10px;border-radius:999px;background:rgba(7,11,24,.78);border:1px solid rgba(126,91,255,.25);font-size:10px;color:#aab4cd}.privacy-status .status-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;box-shadow:0 0 12px #22c55e}.privacy-status.warning .status-dot{background:#f59e0b;box-shadow:0 0 12px #f59e0b}
+#videos{position:absolute;inset:0;overflow:hidden;background:#010207}.video-shell{position:absolute;inset:78px 350px 120px 18px;border:1px solid rgba(126,91,255,.2);border-radius:22px;overflow:hidden;background:#03050c;box-shadow:0 25px 80px rgba(0,0,0,.35)}#remote-video{width:100%;height:100%;object-fit:cover;display:block;background:#050713}.remote-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:#7e89a2;background:radial-gradient(circle,rgba(124,58,237,.08),transparent 45%)}.remote-empty strong{font-size:16px;color:#cfd5e5}.remote-empty span{font-size:11px}.local-pip{position:absolute;z-index:12;width:210px;height:150px;right:28px;bottom:142px;border:1px solid rgba(168,85,247,.62);border-radius:16px;overflow:hidden;background:#050713;box-shadow:0 18px 45px rgba(0,0,0,.55),0 0 28px rgba(139,92,246,.2);touch-action:none;cursor:grab}.local-pip.dragging{cursor:grabbing;opacity:.9}.local-pip video{width:100%;height:100%;object-fit:cover;transform:scaleX(-1)}.pip-label{position:absolute;left:9px;bottom:8px;background:rgba(4,7,18,.72);padding:5px 7px;border-radius:7px;font-size:9px}.pip-hint{position:absolute;right:8px;top:8px;background:rgba(4,7,18,.72);padding:5px 7px;border-radius:7px;font-size:9px;color:#c7d0e5}.pip-menu{position:absolute;right:22px;bottom:305px;z-index:50;background:rgba(6,10,24,.96);border:1px solid rgba(126,91,255,.35);box-shadow:0 20px 60px rgba(0,0,0,.55);padding:12px;border-radius:14px;width:230px;display:none}.pip-menu.open{display:block}.pip-menu h4{font-size:11px;margin-bottom:8px}.pip-menu select{width:100%;background:#0b1021;color:#e8ecf7;border:1px solid rgba(126,91,255,.3);padding:9px;border-radius:9px;font-size:11px}.pip-positions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}.pip-positions button{background:#0b1021;color:#9ba6c0;border:1px solid rgba(126,91,255,.2);border-radius:8px;padding:7px;font-size:9px}.pip-positions button:hover{border-color:#a855f7;color:#fff}
+#status-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:15px;background:rgba(2,4,10,.78);backdrop-filter:blur(14px);z-index:60;transition:.25s}.spinner{width:40px;height:40px;border:3px solid rgba(139,92,246,.18);border-top-color:#a855f7;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}#status-text{font-size:14px;font-weight:700}
+.call-side{position:absolute;right:18px;top:78px;bottom:120px;width:320px;z-index:20;display:flex;flex-direction:column;gap:12px}.call-panel{background:rgba(7,11,25,.86);border:1px solid rgba(126,91,255,.24);backdrop-filter:blur(18px);border-radius:18px;padding:16px}.call-panel h3{font-size:12px;margin-bottom:10px}.privacy-card{min-height:125px}.shield-orb{width:58px;height:58px;border-radius:50%;display:grid;place-items:center;margin-bottom:10px;background:radial-gradient(circle,rgba(168,85,247,.45),rgba(37,99,235,.08) 60%,transparent 70%);border:1px solid rgba(168,85,247,.32);box-shadow:0 0 30px rgba(139,92,246,.2);font-size:25px}.call-panel p{font-size:10px;color:#8792ab;line-height:1.55}.people-row{display:flex;align-items:center;justify-content:space-between}.people-count{font-size:11px;color:#aab4cd}.online{color:#4ade80}.mini-list{display:grid;gap:8px}.mini-list div{display:flex;align-items:center;gap:8px;font-size:10px;color:#aab4cd}.avatar{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#7c3aed,#2563eb);font-size:10px}.side-btn{width:100%;margin-top:10px}
+#controls{position:absolute;left:18px;right:350px;bottom:18px;z-index:35;display:flex;justify-content:center;align-items:center;gap:9px}.ctrl-btn{width:48px;height:48px;border-radius:50%;border:1px solid rgba(126,91,255,.28);background:rgba(8,12,27,.86);color:#e7ebf5;backdrop-filter:blur(14px);font-size:17px;box-shadow:0 10px 30px rgba(0,0,0,.28);transition:.2s}.ctrl-btn:hover{transform:translateY(-2px);border-color:#a855f7;box-shadow:0 0 22px rgba(168,85,247,.22)}.ctrl-btn.active{background:linear-gradient(135deg,#6d28d9,#a855f7);border-color:#c084fc}.ctrl-btn.off{background:rgba(255,59,95,.12);border-color:rgba(255,59,95,.5);color:#ff6680}.ctrl-btn.end{width:58px;height:58px;background:#ff3158;border-color:#ff3158;font-size:21px}.quality-row{position:absolute;left:18px;bottom:78px;z-index:36;display:flex;gap:4px;background:rgba(7,11,24,.82);border:1px solid rgba(126,91,255,.2);padding:4px;border-radius:999px}.q-btn{border:0;background:transparent;color:#77829b;border-radius:999px;padding:6px 10px;font-size:9px}.q-btn.selected{background:#6d28d9;color:#fff}.q-btn:hover:not(.selected){color:#fff}
+#chat-drawer{position:absolute;right:-390px;top:0;width:390px;height:100%;z-index:100;background:rgba(6,10,23,.97);border-left:1px solid rgba(126,91,255,.32);box-shadow:-25px 0 80px rgba(0,0,0,.45);display:flex;flex-direction:column;transition:right .28s ease}.chat-header{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;justify-content:space-between;font-size:13px;font-weight:800}.chat-close{background:none;border:0;color:#8e98b1;font-size:18px}.chat-close:hover{color:#fff}#chat-messages{flex:1;padding:18px;overflow:auto;display:flex;flex-direction:column;gap:11px}.msg-bubble{max-width:80%;padding:10px 12px;border-radius:13px;font-size:12px;line-height:1.4}.msg-bubble.me{align-self:flex-end;background:linear-gradient(135deg,#6d28d9,#a855f7);border-bottom-right-radius:4px}.msg-bubble.them{align-self:flex-start;background:#0e1428;border:1px solid rgba(126,91,255,.18);border-bottom-left-radius:4px}.msg-time{font-size:9px;opacity:.6;margin-top:4px;text-align:right}.chat-input-row{padding:15px;border-top:1px solid rgba(255,255,255,.06);display:flex;gap:8px}.chat-input-row input{flex:1;background:#070b18;border:1px solid rgba(126,91,255,.25);color:#fff;border-radius:10px;padding:11px 12px;outline:none;font-size:11px}.chat-input-row button{border:0;border-radius:10px;background:#7c3aed;color:#fff;padding:0 15px;font-size:11px;font-weight:800}
+#privacy-shield{position:absolute;inset:0;z-index:80;display:none;align-items:center;justify-content:center;background:rgba(2,4,10,.96);backdrop-filter:blur(28px)}#privacy-shield.active{display:flex}.privacy-shield-card{width:min(440px,90vw);text-align:center;padding:30px;border:1px solid rgba(168,85,247,.35);border-radius:22px;background:linear-gradient(145deg,rgba(15,20,42,.96),rgba(6,9,20,.96));box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 50px rgba(139,92,246,.16)}.privacy-shield-icon{font-size:42px;margin-bottom:12px}.privacy-shield-card h3{font-size:19px;margin-bottom:8px}.privacy-shield-card p{font-size:11px;color:#8d98b2;line-height:1.7}
+@media(max-width:1050px){.hero{grid-template-columns:1fr}.hero-art{min-height:260px}.feature-grid{grid-template-columns:repeat(3,1fr)}.lobby-workspace{grid-template-columns:1fr}.call-side{display:none}.video-shell{inset:78px 18px 115px}.local-pip{right:28px;bottom:145px}.quality-row{left:50%;transform:translateX(-50%)}#controls{left:18px;right:18px}}
+@media(max-width:680px){.site-nav{padding:0 16px}.nav-links,.system-pill{display:none}.nav-actions .btn{padding:9px 12px}.hero{padding:26px 16px}.hero h1{font-size:45px}.hero-copy p{font-size:13px}.feature-grid{padding:0 16px 18px;grid-template-columns:repeat(2,1fr)}.lobby-workspace{padding:0 16px 24px}.site-footer{padding:20px 16px;flex-direction:column}.preview-box{height:220px}.video-shell{inset:68px 10px 112px;border-radius:16px}.local-pip{width:145px;height:110px;right:18px;bottom:130px}.call-top{padding:10px}.call-badges .topbar-badge:nth-child(2){display:none}#controls{bottom:12px;gap:6px}.ctrl-btn{width:43px;height:43px}.ctrl-btn.end{width:51px;height:51px}.quality-row{bottom:67px}.q-btn{padding:5px 8px}.pip-menu{right:12px;bottom:255px;width:210px}}
+</style>
+</head>
+<body>
+<div id="app">
+<div id="toast-container"></div>
+<div id="lobby">
+  <nav class="site-nav">
+    <a class="logo" href="#"><svg class="logo-mark" viewBox="0 0 64 64" aria-label="Vyne logo"><defs><linearGradient id="lg" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset=".45" stop-color="#7c3aed"/><stop offset="1" stop-color="#f0abfc"/></linearGradient></defs><path fill="url(#lg)" d="M10 13 24 7l8 14 8-14 14 6-9 30-13-15-13 15z"/><path fill="#fff" opacity=".92" d="m19 18 13 12 13-12-13 23z"/></svg><span>VYNE</span></a>
+    <div class="nav-links"><a href="#features">Features</a><a href="#privacy">Privacy</a><a href="#download">Download</a><a href="#about">About</a></div>
+    <div class="nav-actions"><div class="system-pill"><span class="dot"></span> All Systems Secure</div><button class="btn btn-primary" id="hero-install">Download App ↓</button></div>
+  </nav>
+  <section class="hero">
+    <div class="hero-copy"><div class="eyebrow">PRIVATE ROOMS · REAL-TIME · NO ACCOUNTS</div><h1>Talk <span class="gradient">Freely.</span><br>Stay <span class="gradient">Invisible.</span></h1><p>Private 1:1 video and chat built around ephemeral rooms. No signup, no profile, no conversation history — just a direct connection between you and them.</p><div class="hero-actions"><button class="btn btn-primary" onclick="createCall()">＋ Create Room</button><button class="btn btn-ghost" onclick="document.getElementById('join-card').scrollIntoView({behavior:'smooth'})">↗ Join Room</button></div></div>
+    <div class="hero-art"><div class="hero-orbit"></div><div class="hero-brand"><svg class="logo-mark" viewBox="0 0 64 64"><defs><linearGradient id="lg2" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#22d3ee"/><stop offset=".45" stop-color="#7c3aed"/><stop offset="1" stop-color="#f0abfc"/></linearGradient></defs><path fill="url(#lg2)" d="M10 13 24 7l8 14 8-14 14 6-9 30-13-15-13 15z"/><path fill="#fff" opacity=".92" d="m19 18 13 12 13-12-13 23z"/></svg><strong>VYNE</strong><span>PRIVATE ROOMS. REAL TALKS.</span></div></div>
+  </section>
+  <section class="feature-grid" id="features">
+    <article class="feature-card"><div class="feature-icon">🔐</div><h3>Peer-to-Peer</h3><p>Media flows directly between participants using WebRTC.</p></article><article class="feature-card"><div class="feature-icon">👁️‍🗨️</div><h3>Privacy Shield</h3><p>Foreground and visibility protection with clear privacy states.</p></article><article class="feature-card"><div class="feature-icon">🧹</div><h3>Ephemeral Rooms</h3><p>Rooms are temporary and disappear when the session ends.</p></article><article class="feature-card"><div class="feature-icon">📸</div><h3>Capture Awareness</h3><p>Screen-share and page-state warnings — without false “100% blocking” claims.</p></article><article class="feature-card"><div class="feature-icon">📱</div><h3>Installable</h3><p>Install Vyne as a web app for a fast app-like experience.</p></article><article class="feature-card"><div class="feature-icon">🌐</div><h3>Cross Platform</h3><p>Works across modern desktop and mobile browsers.</p></article>
+  </section>
+  <section class="lobby-workspace" id="privacy">
+    <div class="lobby-card workspace-main">
+      <div class="workspace-head"><div><h2>Start your private room</h2><div class="muted">Preview your camera before entering the call.</div></div><span class="pill pill-green"><span class="pill-dot"></span> Ready</span></div>
+      <div class="preview-box"><video id="lobby-preview" autoplay playsinline muted></video><div class="preview-badge">● Camera preview · local only</div></div>
+      <div class="lobby-actions"><button class="btn btn-primary" onclick="createCall()" id="btn-create">⚡ Create Private Room</button><button class="btn btn-ghost" onclick="document.getElementById('join-card').style.display='block';document.getElementById('join-card').scrollIntoView({behavior:'smooth'})">↗ Join with Code</button></div>
+      <div class="privacy-note">Vyne cannot guarantee blocking OS-level screenshots or recorders; the web privacy layer focuses on detection, awareness and mitigation.</div>
+    </div>
+    <aside class="side-stack">
+      <div class="side-card" id="download"><h3>Install Vyne</h3><p>Turn this website into an app on desktop or mobile.</p><ul class="check-list"><li>App-like launch experience</li><li>Standalone window</li><li>Fast repeat access</li><li>Works across modern browsers</li></ul><button class="btn btn-primary install-card" id="install-app">Install App</button></div>
+      <div class="side-card"><h3>How to start</h3><ul class="check-list"><li>Create or join a room</li><li>Share the room link privately</li><li>Allow camera and microphone</li><li>Talk — then leave when done</li></ul></div>
+      <div class="side-card" id="join-card" style="display:none"><h3>Join a room</h3><p>Open a Vyne invite link or enter the room code below.</p><input class="select-control" id="join-room-input" placeholder="Paste room link / room code"><button class="btn btn-primary" style="width:100%;margin-top:10px" onclick="joinFromInput()">Join Room</button></div>
+      <div class="side-card" id="link-card" style="display:none"><div class="workspace-head"><h3>Your room</h3><span class="pill pill-amber"><span class="pill-dot"></span> Waiting</span></div><div class="link-box"><span id="share-link"></span><button onclick="copyLink()">⧉</button></div><div style="display:flex;gap:8px"><button class="btn btn-primary" style="flex:1" onclick="shareLink()">Share</button><button class="btn btn-ghost" style="flex:1" onclick="cancelCall()">Cancel</button></div></div>
+    </aside>
+  </section>
+  <footer class="site-footer" id="about"><div class="logo"><svg class="logo-mark" viewBox="0 0 64 64"><path fill="#a855f7" d="M10 13 24 7l8 14 8-14 14 6-9 30-13-15-13 15z"/><path fill="#fff" d="m19 18 13 12 13-12-13 23z"/></svg><span>VYNE</span></div><div>Private rooms. Real talks.</div><div class="footer-links"><span>Privacy</span><span>Terms</span><span>Support</span></div><div>Made with ♥ by Vyne</div></footer>
+</div>
+<div id="call-screen">
+  <div class="call-bg"></div><div class="call-top"><div class="call-room"><a class="logo" href="#" onclick="location.reload()"><svg class="logo-mark" viewBox="0 0 64 64"><path fill="#a855f7" d="M10 13 24 7l8 14 8-14 14 6-9 30-13-15-13 15z"/><path fill="#fff" d="m19 18 13 12 13-12-13 23z"/></svg><span>VYNE</span></a><span class="call-room-code">ROOM <span id="room-code-label">—</span></span></div><div class="call-badges"><div class="topbar-badge" id="call-timer">00:00</div><div class="topbar-badge" id="data-usage">~0 MB</div><div class="topbar-badge" id="conn-status">● <span id="quality-label">360p Medium</span></div></div></div>
+  <div class="privacy-status" id="privacy-status"><span class="status-dot"></span><span id="privacy-status-text">Privacy Shield ready</span></div>
+  <div id="videos"><div class="video-shell"><video id="remote-video" autoplay playsinline></video><div class="remote-empty" id="remote-empty"><strong>Waiting for your connection</strong><span>Your peer will appear here when the room connects.</span></div></div><div class="local-pip" id="local-pip"><video id="local-video" autoplay playsinline muted title="Drag to move · click to cycle position"></video><span class="pip-label">You</span><span class="pip-hint">Drag to move</span></div></div>
+  <div class="pip-menu" id="pip-menu"><h4>Camera & visibility</h4><select id="camera-select"></select><div class="pip-positions"><button onclick="setPiPPosition('tl')">Top Left</button><button onclick="setPiPPosition('tr')">Top Right</button><button onclick="setPiPPosition('bl')">Bottom Left</button><button onclick="setPiPPosition('br')">Bottom Right</button></div></div>
+  <aside class="call-side"><div class="call-panel privacy-card"><div class="shield-orb">🛡️</div><h3>Privacy Shield</h3><p>Foreground protection, screen-share awareness and privacy status indicators are active for this session.</p><button class="btn btn-ghost side-btn" onclick="togglePrivacyShield()">Toggle Shield</button></div><div class="call-panel"><div class="people-row"><h3>Room</h3><span class="people-count online">● 2 people</span></div><div class="mini-list"><div><span class="avatar">Y</span> You · camera & mic</div><div><span class="avatar">V</span> Peer · connected</div></div></div><div class="call-panel"><h3>Quick controls</h3><p>Move your camera tile anywhere for better visibility. Use the camera menu to switch between available cameras.</p><button class="btn btn-primary side-btn" onclick="toggleCameraMenu()">Camera & Position</button></div></aside>
+  <div id="status-overlay"><div class="spinner"></div><div id="status-text">Connecting…</div></div>
+  <div class="quality-row"><button class="q-btn" id="q-audio" onclick="setQuality('audio')">Audio</button><button class="q-btn" id="q-low" onclick="setQuality('low')">240p</button><button class="q-btn selected" id="q-med" onclick="setQuality('medium')">360p</button><button class="q-btn" id="q-high" onclick="setQuality('high')">480p</button></div>
+  <div id="controls"><button class="ctrl-btn" id="btn-mic" onclick="toggleMic()" title="Microphone">🎤</button><button class="ctrl-btn" id="btn-cam" onclick="toggleCam()" title="Camera">📷</button><button class="ctrl-btn" id="btn-camera-switch" onclick="toggleCameraMenu()" title="Switch camera">🔄</button><button class="ctrl-btn" id="btn-screen" onclick="toggleScreenShare()" title="Share screen">▣</button><button class="ctrl-btn" id="btn-shield" onclick="togglePrivacyShield()" title="Privacy Shield">🛡️</button><button class="ctrl-btn" id="btn-chat" onclick="toggleChat()" title="Chat">▤<span id="unread-dot" class="badge-dot" style="display:none"></span></button><button class="ctrl-btn end" onclick="endCall()" title="End call">☎</button></div>
+  <div id="privacy-shield" aria-live="polite"><div class="privacy-shield-card"><div class="privacy-shield-icon">🛡️</div><h3>Privacy Shield Active</h3><p id="privacy-shield-text">The call is temporarily hidden while Vyne is not in the foreground.</p></div></div>
+  <div id="chat-drawer"><div class="chat-header"><span>Private Room Chat</span><button class="chat-close" onclick="toggleChat()">×</button></div><div id="chat-messages"></div><div class="chat-input-row"><input type="text" id="chat-input" placeholder="Type a private message..." onkeydown="if(event.key==='Enter') sendChatMessage()"><button onclick="sendChatMessage()">Send</button></div></div>
+</div>
+</div>
+<script>
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION & GLOBAL STATE
+// ═══════════════════════════════════════════════════════════════════════════
+
+// Dynamic Signaling Server URL
+function getSignalingUrl() {
+  // If injected by build/deploy environment variable
+  if (window.__VYNE_SIGNAL_URL__) {
+    return window.__VYNE_SIGNAL_URL__;
+  }
+  // If running via HTTP/HTTPS server
+  if (location.protocol === "http:" || location.protocol === "https:") {
+    const wsProto = location.protocol === "https:" ? "wss:" : "ws:";
+    return `${wsProto}//${location.host}`;
+  }
+  // File protocol fallback
+  return "ws://localhost:8080";
+}
+
+const CONFIG = {
+  ICE_SERVERS: [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun3.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:19302" }
+  ],
+  QUALITY: {
+    audio:  { video: false, width: 0,   height: 0,   fps: 0,  maxVideoBps: 0,       label: "Audio Only" },
+    low:    { video: true,  width: 320,  height: 240,  fps: 12, maxVideoBps: 150_000, label: "240p Low" },
+    medium: { video: true,  width: 480,  height: 360,  fps: 20, maxVideoBps: 350_000, label: "360p Medium" },
+    high:   { video: true,  width: 640,  height: 480,  fps: 25, maxVideoBps: 700_000, label: "480p High" }
+  }
+};
+
+let ws          = null;   // WebSocket
+let pc          = null;   // RTCPeerConnection
+let dataChannel = null;   // RTCDataChannel for peer chat
+let localStream = null;   // Camera/Mic MediaStream
+let screenStream = null;  // Screen Share MediaStream
+let roomId      = null;   // Current Room ID
+let isCreator   = false;  // Creator of room
+let currentQuality = "medium";
+let micOn       = true;
+let camOn       = true;
+let isScreenSharing = false;
+let privacyShieldEnabled = true;
+let privacyShieldVisible = false;
+let pageBlurTimer = null;
+
+let callStartTime  = null;
+let timerInterval  = null;
+let dataInterval   = null;
+let estimatedBytes = 0;
+
+let remoteCandidatesBuffer = []; // Buffer ICE candidates until remote SDP is set
+let unreadChatCount = 0;
+let isChatOpen = false;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INITIALIZATION & LOBBY LOGIC
+// ═══════════════════════════════════════════════════════════════════════════
+
+function showToast(msg) {
+  const container = document.getElementById("toast-container");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  toast.innerHTML = `<span>ℹ️</span> <span>${msg}</span>`;
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 3500);
+}
+
+function getRoomIdFromUrl() {
+  const hash = location.hash.slice(1);
+  const params = new URLSearchParams(hash);
+  return params.get("roomId");
+}
+
+function setRoomIdInUrl(id) {
+  location.hash = `roomId=${id}`;
+}
+
+function generateRoomId() {
+  const arr = new Uint8Array(8);
+  crypto.getRandomValues(arr);
+  return Array.from(arr, b => b.toString(36).padStart(2, "0")).join("").slice(0, 10);
+}
+
+window.addEventListener("load", async () => {
+  const id = getRoomIdFromUrl();
+  if (id) {
+    roomId = id;
+    document.getElementById("create-card").style.display = "none";
+    document.getElementById("join-card").style.display   = "block";
+    await startLobbyPreview("join-preview");
+  } else {
+    await startLobbyPreview("lobby-preview");
+  }
+});
+
+async function startLobbyPreview(videoElemId) {
+  try {
+    const previewStream = await navigator.mediaDevices.getUserMedia({
+      audio: false,
+      video: { width: 480, height: 360 }
+    });
+    const elem = document.getElementById(videoElemId);
+    if (elem) elem.srcObject = previewStream;
+  } catch (err) {
+    console.warn("Lobby preview unavailable:", err.message);
+  }
+}
+
+async function createCall() {
+  roomId = generateRoomId();
+  isCreator = true;
+  setRoomIdInUrl(roomId);
+
+  const shareableUrl = `${location.origin}${location.pathname}#roomId=${roomId}`;
+  document.getElementById("share-link").textContent = shareableUrl;
+  document.getElementById("create-card").style.display = "none";
+  document.getElementById("link-card").style.display   = "block";
+
+  showToast("Call link generated! Waiting for partner.");
+
+  await acquireMedia("medium");
+  connectSignaling();
+}
+
+function cancelCall() {
+  history.pushState(null, "", location.pathname);
+  location.reload();
+}
+
+function copyLink() {
+  const link = document.getElementById("share-link").textContent;
+  navigator.clipboard.writeText(link).then(() => {
+    showToast("Link copied to clipboard!");
+  }).catch(() => {
+    showToast("Failed to copy link.");
+  });
+}
+
+async function shareLink() {
+  const link = document.getElementById("share-link").textContent;
+  if (navigator.share) {
+    try {
+      await navigator.share({ title: "Join my Vyne call", text: "Encrypted P2P video call link:", url: link });
+    } catch {}
+  } else {
+    copyLink();
+  }
+}
+
+async function joinCall() {
+  isCreator = false;
+  await acquireMedia("medium");
+  connectSignaling();
+}
+
+async function joinAudioOnly() {
+  isCreator = false;
+  currentQuality = "audio";
+  await acquireMedia("audio");
+  connectSignaling();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MEDIA ACQUISITION
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function acquireMedia(quality) {
+  const q = CONFIG.QUALITY[quality];
+  const constraints = q.video
+    ? {
+        audio: { echoCancellation: true, noiseSuppression: true, sampleRate: 16000, channelCount: 1 },
+        video: { width: { ideal: q.width }, height: { ideal: q.height }, frameRate: { ideal: q.fps, max: q.fps }, facingMode: "user" }
+      }
+    : {
+        audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 },
+        video: false
+      };
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia(constraints);
+    document.getElementById("local-video").srcObject = localStream;
+    updateQualityLabel(quality);
+  } catch (err) {
+    showToast(`Camera/mic error: ${err.message}`);
+    alert(`Could not access camera/microphone: ${err.message}`);
+    throw err;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SIGNALING & WEBRTC HANDSHAKE
+// ═══════════════════════════════════════════════════════════════════════════
+
+function connectSignaling() {
+  showCallScreen();
+  setStatus("Connecting to signaling server…");
+
+  const url = getSignalingUrl();
+  console.log("Connecting to WebSocket:", url);
+  ws = new WebSocket(url);
+
+  ws.onopen = () => {
+    setStatus("Connected! Joining room…");
+    ws.send(JSON.stringify({ type: "join", roomId }));
+  };
+
+  ws.onmessage = async (evt) => {
+    let msg;
+    try { msg = JSON.parse(evt.data); } catch { return; }
+
+    switch (msg.type) {
+      case "joined":
+        isCreator = (msg.peerId === "peer0");
+        if (isCreator) {
+          setStatus("Waiting for partner to open link…");
+        } else {
+          setStatus("Partner present! Setting up encryption…");
+          await createPeerConnection();
+        }
+        break;
+
+      case "peer-joined":
+        setStatus("Partner joined! Initializing encrypted connection…");
+        showToast("Partner joined the room!");
+        await createPeerConnection();
+        await sendOffer();
+        break;
+
+      case "offer":
+        await handleOffer(msg.sdp);
+        break;
+
+      case "answer":
+        if (pc) {
+          await pc.setRemoteDescription(new RTCSessionDescription({ type: "answer", sdp: msg.sdp }));
+          await processBufferedIceCandidates();
+        }
+        break;
+
+      case "ice-candidate":
+        if (msg.candidate) {
+          const candidate = new RTCIceCandidate(msg.candidate);
+          if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+            try { await pc.addIceCandidate(candidate); } catch (e) { console.warn("ICE error:", e); }
+          } else {
+            remoteCandidatesBuffer.push(candidate);
+          }
+        }
+        break;
+
+      case "media-state":
+        if (msg.state) {
+          if (msg.state.micOn === false) showToast("Partner muted their mic");
+          if (msg.state.camOn === false) showToast("Partner turned off their camera");
+        }
+        break;
+
+      case "screen-share-state":
+        if (msg.isSharing) {
+          showToast("Partner started screen sharing");
+          updatePrivacyStatus("Partner is sharing their screen", true);
+        } else {
+          showToast("Partner stopped screen sharing");
+          updatePrivacyStatus("Privacy Shield ready", false);
+        }
+        break;
+
+      case "peer-left":
+        setStatus("Partner disconnected.");
+        showToast("Partner left the call.");
+        setTimeout(endCall, 3000);
+        break;
+
+      case "error":
+        showToast(`Signaling error: ${msg.message}`);
+        setStatus(`Error: ${msg.message}`);
+        break;
+    }
+  };
+
+  ws.onerror = (err) => {
+    console.error("Signaling error:", err);
+    setStatus("Connection error — please check network.");
+  };
+
+  ws.onclose = () => {
+    console.log("WebSocket closed");
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WEBRTC PEER CONNECTION
+// ═══════════════════════════════════════════════════════════════════════════
+
+async function createPeerConnection() {
+  if (pc) return;
+
+  pc = new RTCPeerConnection({ iceServers: CONFIG.ICE_SERVERS });
+
+  // Add tracks
+  if (localStream) {
+    localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+  }
+
+  // Setup DataChannel for encrypted chat
+  if (isCreator) {
+    dataChannel = pc.createDataChannel("chat");
+    setupDataChannel(dataChannel);
+  } else {
+    pc.ondatachannel = (event) => {
+      dataChannel = event.channel;
+      setupDataChannel(dataChannel);
+    };
+  }
+
+  // ICE candidates
+  pc.onicecandidate = ({ candidate }) => {
+    if (candidate && ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: "ice-candidate", candidate }));
+    }
+  };
+
+  // Connection states
+  pc.onconnectionstatechange = () => {
+    console.log("WebRTC Connection State:", pc.connectionState);
+    switch (pc.connectionState) {
+      case "connected":
+        onCallConnected();
+        break;
+      case "disconnected":
+      case "failed":
+        setStatus("Reconnecting encrypted media stream…");
+        break;
+    }
+  };
+
+  // Remote tracks
+  pc.ontrack = (event) => {
+    console.log("Remote track received:", event.track.kind);
+    const remoteVideo = document.getElementById("remote-video");
+    if (event.streams && event.streams[0]) {
+      remoteVideo.srcObject = event.streams[0];
+    } else {
+      let stream = remoteVideo.srcObject;
+      if (!stream) {
+        stream = new MediaStream();
+        remoteVideo.srcObject = stream;
+      }
+      stream.addTrack(event.track);
+    }
+  };
+}
+
+async function sendOffer() {
+  const offer = await pc.createOffer({
+    offerToReceiveAudio: true,
+    offerToReceiveVideo: currentQuality !== "audio"
+  });
+  await pc.setLocalDescription(offer);
+  await applyBitrateConstraints(currentQuality);
+  ws.send(JSON.stringify({ type: "offer", sdp: pc.localDescription.sdp }));
+}
+
+async function handleOffer(sdp) {
+  await createPeerConnection();
+  await pc.setRemoteDescription(new RTCSessionDescription({ type: "offer", sdp }));
+  await processBufferedIceCandidates();
+
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await applyBitrateConstraints(currentQuality);
+  ws.send(JSON.stringify({ type: "answer", sdp: pc.localDescription.sdp }));
+}
+
+async function processBufferedIceCandidates() {
+  while (remoteCandidatesBuffer.length > 0) {
+    const candidate = remoteCandidatesBuffer.shift();
+    try { await pc.addIceCandidate(candidate); } catch (e) { console.warn("Buffered ICE add error:", e); }
+  }
+}
+
+async function applyBitrateConstraints(quality) {
+  if (!pc) return;
+  const q = CONFIG.QUALITY[quality];
+  const senders = pc.getSenders();
+
+  for (const sender of senders) {
+    if (sender.track?.kind === "video") {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
+      params.encodings[0].maxBitrate = q.maxVideoBps;
+      try { await sender.setParameters(params); } catch {}
+    }
+    if (sender.track?.kind === "audio") {
+      const params = sender.getParameters();
+      if (!params.encodings || params.encodings.length === 0) params.encodings = [{}];
+      params.encodings[0].maxBitrate = 24_000;
+      try { await sender.setParameters(params); } catch {}
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CALL CONNECTED & METRICS
+// ═══════════════════════════════════════════════════════════════════════════
+
+function onCallConnected() {
+  document.getElementById("status-overlay").classList.add("hidden");
+  showToast("Encrypted call connected!");
+  callStartTime = Date.now();
+  startTimer();
+  startDataEstimator();
+}
+
+function startTimer() {
+  if (timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - callStartTime) / 1000);
+    const m = Math.floor(elapsed / 60).toString().padStart(2, "0");
+    const s = (elapsed % 60).toString().padStart(2, "0");
+    document.getElementById("call-timer").textContent = `${m}:${s}`;
+  }, 1000);
+}
+
+function startDataEstimator() {
+  if (dataInterval) clearInterval(dataInterval);
+  dataInterval = setInterval(() => {
+    const q = CONFIG.QUALITY[currentQuality];
+    const bps = q.maxVideoBps + 24_000;
+    estimatedBytes += bps / 8;
+    const mb = (estimatedBytes / 1_000_000).toFixed(1);
+    document.getElementById("data-usage").textContent = `~${mb} MB`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTROLS & FEATURES
+// ═══════════════════════════════════════════════════════════════════════════
+
+function toggleMic() {
+  micOn = !micOn;
+  if (localStream) {
+    localStream.getAudioTracks().forEach(t => t.enabled = micOn);
+  }
+  const btn = document.getElementById("btn-mic");
+  btn.textContent = micOn ? "🎤" : "🔇";
+  btn.classList.toggle("off", !micOn);
+  sendMediaState();
+}
+
+function toggleCam() {
+  camOn = !camOn;
+  if (localStream) {
+    localStream.getVideoTracks().forEach(t => t.enabled = camOn);
+  }
+  const btn = document.getElementById("btn-cam");
+  btn.textContent = camOn ? "📷" : "🚫";
+  btn.classList.toggle("off", !camOn);
+  sendMediaState();
+}
+
+async function toggleScreenShare() {
+  if (isScreenSharing) {
+    stopScreenShare();
+  } else {
+    try {
+      screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
+      const screenTrack = screenStream.getVideoTracks()[0];
+
+      const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+      if (sender) {
+        await sender.replaceTrack(screenTrack);
+      }
+
+      document.getElementById("local-video").srcObject = screenStream;
+      document.getElementById("btn-screen").classList.add("active");
+      isScreenSharing = true;
+      updatePrivacyStatus("You are sharing your screen", true);
+      showToast("Started screen sharing");
+      notifyScreenShareState(true);
+
+      screenTrack.onended = () => stopScreenShare();
+    } catch (err) {
+      showToast("Screen share cancelled");
+    }
+  }
+}
+
+async function stopScreenShare() {
+  if (!isScreenSharing) return;
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+  const camTrack = localStream?.getVideoTracks()[0];
+  const sender = pc?.getSenders().find(s => s.track?.kind === "video");
+  if (sender && camTrack) {
+    await sender.replaceTrack(camTrack);
+  }
+
+  document.getElementById("local-video").srcObject = localStream;
+  document.getElementById("btn-screen").classList.remove("active");
+  isScreenSharing = false;
+  updatePrivacyStatus("Privacy Shield ready", false);
+  showToast("Stopped screen sharing");
+  notifyScreenShareState(false);
+}
+
+function notifyScreenShareState(isSharing) {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "screen-share-state", isSharing }));
+  }
+}
+
+async function setQuality(q) {
+  document.querySelectorAll(".q-btn").forEach(b => b.classList.remove("selected"));
+  document.getElementById(`q-${q}`).classList.add("selected");
+
+  currentQuality = q;
+  updateQualityLabel(q);
+
+  if (q === "audio") {
+    if (localStream) localStream.getVideoTracks().forEach(t => t.enabled = false);
+  } else {
+    if (localStream && camOn) localStream.getVideoTracks().forEach(t => t.enabled = true);
+  }
+
+  await applyBitrateConstraints(q);
+}
+
+function updateQualityLabel(q) {
+  document.getElementById("quality-label").textContent = CONFIG.QUALITY[q].label;
+}
+
+function sendMediaState() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "media-state", state: { micOn, camOn } }));
+  }
+}
+
+
+
+function updatePrivacyStatus(text, warning = false) {
+  const status = document.getElementById("privacy-status");
+  const label = document.getElementById("privacy-status-text");
+  if (label) label.textContent = text;
+  if (status) status.classList.toggle("warning", warning);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PRIVACY SHIELD
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setPrivacyShield(active, reason = "Privacy Shield active") {
+  privacyShieldVisible = active;
+  const shield = document.getElementById("privacy-shield");
+  const status = document.getElementById("privacy-status");
+  const statusText = document.getElementById("privacy-status-text");
+  if (shield) shield.classList.toggle("active", active);
+  if (status) status.classList.toggle("warning", active);
+  if (statusText) statusText.textContent = active ? reason : "Privacy Shield ready";
+}
+
+function togglePrivacyShield() {
+  privacyShieldEnabled = !privacyShieldEnabled;
+  const btn = document.getElementById("btn-shield");
+  if (btn) btn.classList.toggle("active", privacyShieldEnabled);
+  showToast(privacyShieldEnabled
+    ? "Privacy Shield enabled"
+    : "Privacy Shield disabled");
+  if (!privacyShieldEnabled) setPrivacyShield(false);
+}
+
+function handlePagePrivacyState() {
+  if (!privacyShieldEnabled) return;
+
+  clearTimeout(pageBlurTimer);
+
+  if (document.visibilityState === "hidden") {
+    setPrivacyShield(true, "Call hidden while Vyne is in the background");
+    return;
+  }
+
+  // A short delay avoids flashing the shield during normal focus changes.
+  pageBlurTimer = setTimeout(() => {
+    if (document.visibilityState === "visible") setPrivacyShield(false);
+  }, 180);
+}
+
+document.addEventListener("visibilitychange", handlePagePrivacyState);
+window.addEventListener("blur", () => {
+  if (privacyShieldEnabled) {
+    pageBlurTimer = setTimeout(() => {
+      if (document.visibilityState !== "visible") {
+        setPrivacyShield(true, "Call hidden while Vyne is not in focus");
+      }
+    }, 350);
+  }
+});
+window.addEventListener("focus", handlePagePrivacyState);
+
+// Browser-level screenshot blocking is not available to normal web apps.
+// These controls are deterrence/mitigation, not guaranteed screenshot prevention.
+document.addEventListener("contextmenu", (event) => {
+  if (document.getElementById("call-screen")?.style.display !== "none") {
+    event.preventDefault();
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ENCRYPTED P2P CHAT
+// ═══════════════════════════════════════════════════════════════════════════
+
+function setupDataChannel(channel) {
+  channel.onopen = () => console.log("DataChannel open");
+  channel.onmessage = (e) => {
+    appendChatMessage(e.data, "them");
+    if (!isChatOpen) {
+      unreadChatCount++;
+      document.getElementById("unread-dot").style.display = "block";
+      showToast("New chat message received");
+    }
+  };
+}
+
+function toggleChat() {
+  const drawer = document.getElementById("chat-drawer");
+  isChatOpen = !isChatOpen;
+  drawer.classList.toggle("open", isChatOpen);
+
+  if (isChatOpen) {
+    unreadChatCount = 0;
+    document.getElementById("unread-dot").style.display = "none";
+    document.getElementById("chat-input").focus();
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  if (dataChannel && dataChannel.readyState === "open") {
+    dataChannel.send(text);
+    appendChatMessage(text, "me");
+    input.value = "";
+  } else {
+    showToast("Chat connection not ready");
+  }
+}
+
+function appendChatMessage(text, sender) {
+  const container = document.getElementById("chat-messages");
+  const bubble = document.createElement("div");
+  bubble.className = `msg-bubble ${sender}`;
+
+  const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  bubble.innerHTML = `${escapeHtml(text)} <div class="msg-time">${timeStr}</div>`;
+
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TEARDOWN & CLEANUP
+// ═══════════════════════════════════════════════════════════════════════════
+
+function endCall() {
+  if (ws?.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({ type: "leave" }));
+    ws.close();
+  }
+  if (dataChannel) { dataChannel.close(); dataChannel = null; }
+  if (pc) { pc.close(); pc = null; }
+
+  if (localStream) {
+    localStream.getTracks().forEach(t => t.stop());
+    localStream = null;
+  }
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+
+  clearInterval(timerInterval);
+  clearInterval(dataInterval);
+
+  history.pushState(null, "", location.pathname);
+  location.reload();
+}
+
+function showCallScreen() {
+  document.getElementById("lobby").style.display       = "none";
+  document.getElementById("call-screen").style.display = "flex";
+}
+
+function setStatus(msg) {
+  const overlay = document.getElementById("status-overlay");
+  overlay.classList.remove("hidden");
+  document.getElementById("status-text").textContent = msg;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// VYNE V2 UI: PWA INSTALL + CAMERA SWITCHING + DRAGGABLE PiP
+// ═══════════════════════════════════════════════════════════════════════════
+let deferredInstallPrompt = null;
+let availableCameras = [];
+let activeCameraId = null;
+let pipPosition = "br";
+
+window.addEventListener("beforeinstallprompt", (event) => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  ["install-app", "hero-install"].forEach(id => { const b=document.getElementById(id); if(b) b.style.display="inline-flex"; });
+});
+async function installVyne() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    try { await deferredInstallPrompt.userChoice; } catch {}
+    deferredInstallPrompt = null;
+    return;
+  }
+  showToast("Use your browser's Install App / Add to Home Screen option.");
+}
+function setupPwaButtons(){ ["install-app","hero-install"].forEach(id=>document.getElementById(id)?.addEventListener("click",installVyne)); }
+
+async function refreshCameraList() {
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    availableCameras = devices.filter(d => d.kind === "videoinput");
+    const select = document.getElementById("camera-select");
+    if (!select) return;
+    select.innerHTML = "";
+    availableCameras.forEach((d,i)=>{
+      const opt=document.createElement("option"); opt.value=d.deviceId; opt.textContent=d.label || `Camera ${i+1}`; select.appendChild(opt);
+    });
+    if (activeCameraId) select.value = activeCameraId;
+  } catch(e) { console.warn("Camera list unavailable",e); }
+}
+async function switchCamera(deviceId) {
+  if (isScreenSharing) { showToast("Stop screen sharing before switching cameras."); return; }
+  if (!navigator.mediaDevices?.getUserMedia || !localStream) return;
+  try {
+    const constraints = { audio:false, video:{ deviceId: deviceId ? {exact:deviceId} : undefined, width:{ideal:640}, height:{ideal:480}, frameRate:{ideal:25,max:30} } };
+    const replacement = await navigator.mediaDevices.getUserMedia(constraints);
+    const newTrack = replacement.getVideoTracks()[0];
+    const oldTrack = localStream.getVideoTracks()[0];
+    const sender = pc?.getSenders().find(s=>s.track?.kind === "video");
+    if (sender) await sender.replaceTrack(newTrack);
+    if (oldTrack) oldTrack.stop();
+    localStream.removeTrack(oldTrack); localStream.addTrack(newTrack);
+    activeCameraId = newTrack.getSettings().deviceId || deviceId;
+    document.getElementById("local-video").srcObject = localStream;
+    await refreshCameraList();
+    showToast("Camera switched");
+  } catch(err) { showToast(`Could not switch camera: ${err.message}`); }
+}
+function toggleCameraMenu(){
+  const menu=document.getElementById("pip-menu"); menu.classList.toggle("open");
+  if(menu.classList.contains("open")) refreshCameraList();
+}
+function setPiPPosition(pos){
+  const pip=document.getElementById("local-pip"); if(!pip) return; pipPosition=pos;
+  pip.style.left=pip.style.right=pip.style.top=pip.style.bottom="";
+  const gap=18;
+  if(pos.includes("t")) pip.style.top=`${gap}px`; else pip.style.bottom=`${gap}px`;
+  if(pos.includes("l")) pip.style.left=`${gap}px`; else pip.style.right=`${gap}px`;
+  document.getElementById("pip-menu").classList.remove("open");
+}
+function setupDraggablePip(){
+  const pip=document.getElementById("local-pip"); if(!pip) return;
+  let dragging=false,startX=0,startY=0,startLeft=0,startTop=0,moved=false;
+  const down=(e)=>{ const pt=e.touches?e.touches[0]:e; const r=pip.getBoundingClientRect(); dragging=true;moved=false;startX=pt.clientX;startY=pt.clientY;startLeft=r.left;startTop=r.top;pip.classList.add("dragging"); };
+  const move=(e)=>{ if(!dragging)return; const pt=e.touches?e.touches[0]:e; const container=document.getElementById("videos").getBoundingClientRect(); const nr=pip.getBoundingClientRect(); let x=startLeft+(pt.clientX-startX), y=startTop+(pt.clientY-startY); x=Math.max(container.left+8,Math.min(x,container.right-nr.width-8)); y=Math.max(container.top+8,Math.min(y,container.bottom-nr.height-8)); pip.style.left=`${x-container.left}px`;pip.style.top=`${y-container.top}px`;pip.style.right="";pip.style.bottom="";moved=true; };
+  const up=()=>{if(!dragging)return;dragging=false;pip.classList.remove("dragging");if(!moved) cyclePiPPosition();};
+  pip.addEventListener("pointerdown",down); window.addEventListener("pointermove",move); window.addEventListener("pointerup",up);
+}
+function cyclePiPPosition(){ const order=["br","bl","tr","tl"]; setPiPPosition(order[(order.indexOf(pipPosition)+1)%order.length]); }
+
+function joinFromInput(){
+  const raw=document.getElementById("join-room-input").value.trim(); if(!raw)return;
+  let id=raw;
+  try { const u=new URL(raw); id=new URLSearchParams(u.hash.slice(1)).get("roomId") || u.hash.slice(1); } catch {}
+  if(id){ roomId=id.replace(/^roomId=/,""); setRoomIdInUrl(roomId); joinCall(); }
+}
+
+const originalAcquireMedia = acquireMedia;
+acquireMedia = async function(quality){ await originalAcquireMedia(quality); const t=localStream?.getVideoTracks?.()[0]; if(t) activeCameraId=t.getSettings().deviceId || null; await refreshCameraList(); };
+const originalCreateCall = createCall;
+createCall = async function(){ await originalCreateCall(); document.getElementById("room-code-label").textContent=roomId || "—"; };
+const originalShowCallScreen = showCallScreen;
+showCallScreen = function(){ originalShowCallScreen(); document.getElementById("room-code-label").textContent=roomId || "—"; document.getElementById("remote-empty").style.display="flex"; setPiPPosition(pipPosition); refreshCameraList(); };
+const originalOnCallConnected = onCallConnected;
+onCallConnected = function(){ originalOnCallConnected(); document.getElementById("remote-empty").style.display="none"; };
+
+if ("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("/sw.js").catch(()=>{}));
+document.addEventListener("DOMContentLoaded",()=>{ setupPwaButtons(); setupDraggablePip(); document.getElementById("camera-select")?.addEventListener("change",e=>switchCamera(e.target.value)); });
+
+</script>
+</body>
+</html>
